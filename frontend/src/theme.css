@@ -85,20 +85,10 @@ section { margin-bottom: 28px; }
 .badge.youtube { background: #b42318; } .badge.facebook { background: #2b5bb5; } .badge.linkedin { background: #1f5e8c; }
 .badge.instagram { background: #a33a6b; } .badge.tiktok { background: #171a21; }
 
-/* Estudio */
-.studio { min-height: 100vh; display: flex; flex-direction: column; }
-.studio-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; padding: 10px 16px; background: var(--navy); color: #fff; }
-.live-badge { background: var(--danger); padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 700; }
-.studio-body { flex: 1; display: flex; flex-wrap: wrap; gap: 16px; padding: 16px; }
-.stage { flex: 999 1 560px; min-width: 0; min-height: 420px; background: #13222e; border-radius: 12px; overflow: hidden; }
-.panel { flex: 1 1 280px; max-width: 360px; background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
-.check { display: flex; align-items: center; gap: 10px; min-height: 44px; font-weight: 400; }
-.check input { width: 20px; min-height: 20px; }
+/* El estudio tiene sus propios estilos en src/studio/studio.css */
 
 @media (max-width: 640px) {
   .sidenav { max-width: none; flex-direction: row; flex-wrap: wrap; align-items: center; }
   .sidenav-foot { margin-top: 0; border-top: none; padding-top: 0; }
   .content { padding: 20px 16px; }
-  .panel { max-width: none; }
-  .stage { min-height: 260px; }
 }
