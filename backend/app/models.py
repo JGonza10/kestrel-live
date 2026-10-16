@@ -99,3 +99,14 @@ class GuestInvite(db.Model):
     code_encrypted = db.Column(db.LargeBinary, nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow)
     revoked_at = db.Column(db.DateTime(timezone=True), nullable=True)
+
+
+class StudioLook(db.Model):
+    """Marca del usuario en el estudio: banners, estilo de nombres y guion del teleprompter.
+    Se guarda como JSON ya validado (ver studio.py)."""
+
+    __tablename__ = "studio_looks"
+
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
+    data = db.Column(db.Text, nullable=False, default="{}")
+    updated_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow, onupdate=utcnow)

@@ -13,7 +13,7 @@ import Stage from '../studio/Stage.jsx'
 import DeviceSettings from '../studio/DeviceSettings.jsx'
 import SidePanel, { SWATCHES, abbr } from '../studio/SidePanel.jsx'
 import { LAYOUTS, SCENES, destSummary, egressLayout, formatClock, initials } from '../studio/layouts.js'
-import { useSticky } from '../studio/useSticky.js'
+import { useServerLook } from '../studio/useServerLook.js'
 import { STAGE_TOPIC, encodeStage, guestLink, isGuest } from '../studio/stageSync.js'
 import { useStageSources } from '../studio/useStageSources.js'
 import '../studio/studio.css'
@@ -76,7 +76,7 @@ export default function Studio() {
 
 function StudioRoom({ broadcast, setBroadcast, dests, studioOutput, error, setError }) {
   const id = broadcast.id
-  const [look, setLook] = useSticky(`kl-studio-${id}`, DEFAULT_LOOK)
+  const [look, setLook] = useServerLook(DEFAULT_LOOK, setError)
   const banners = Array.isArray(look.banners)
     ? look.banners.filter((b) => b && typeof b.text === 'string' && typeof b.id === 'string')
     : []

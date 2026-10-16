@@ -40,6 +40,12 @@ npm run dev                                         # http://localhost:5173
 
 Entra a http://localhost:5173 con tu usuario. Agrega tus destinos con la clave de transmisión que te da cada red, crea una transmisión y entra al estudio.
 
+### Lo que sale al aire
+
+Egress (en Docker) abre la página `/salida` de Vite y transmite exactamente el lienzo del estudio: diseño, nombres, temas, color, logo y banners. Por eso **Vite tiene que estar corriendo** mientras transmites. Si Egress no logra abrir la página (por ejemplo en Linux, donde Docker no ve el `localhost` de la laptop), arranca el frontend con `npm run dev:red` o deja `EGRESS_TEMPLATE_URL` vacía para volver a la plantilla genérica de LiveKit.
+
+Tus banners, el estilo y el guion del teleprompter se guardan en tu cuenta, así que los tienes en cualquier transmisión y en cualquier navegador.
+
 ### Invitados
 
 En el estudio, **Tras bastidores → Copiar link de invitado**. Quien abra el link escribe su nombre y entra tras bastidores; tú decides cuándo sale en escena. El invitado ve el mismo lienzo que el público, tiene mic, cámara, presentar pantalla y el chat privado.
@@ -60,6 +66,7 @@ En el estudio, **Tras bastidores → Copiar link de invitado**. Quien abra el li
 | `LIVEKIT_API_KEY` / `LIVEKIT_API_SECRET` | Llaves compartidas entre Flask, LiveKit y Egress. |
 | `LIVEKIT_URL` / `LIVEKIT_WS_URL` | Dónde está LiveKit (API y WebSocket). |
 | `SESSION_COOKIE_SECURE`, `SESSION_HOURS`, `LOGIN_MAX_ATTEMPTS`, `LOGIN_LOCK_MINUTES` | Ajustes de sesión y bloqueo de login. |
+| `EGRESS_TEMPLATE_URL` | Página que Egress abre para que lo que sale al aire sea igual al lienzo. Vacía = plantilla de LiveKit. |
 
 ## Seguridad incluida
 
@@ -89,7 +96,7 @@ Por ahora es **solo local**. El video necesita puertos UDP (50000-50100) que Rai
 - [x] Login, destinos RTMP cifrados, transmisiones y grabaciones (API + pruebas)
 - [x] Estudio con LiveKit y botón Salir en vivo / Grabar
 - [x] Invitados por link (token de solo-invitado)
-- [ ] Escenas, banners, logo y temas de nombres (como en el prototipo)
+- [x] Escenas, banners, logo y temas de nombres (como en el prototipo), guardados en el servidor y idénticos al aire
 - [ ] Comentarios del chat de YouTube y Facebook en pantalla
 - [ ] IA: subtítulos en vivo, moderación del chat, resumen, capítulos y clips verticales
 - [ ] Biblioteca de grabaciones
