@@ -110,3 +110,19 @@ class StudioLook(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
     data = db.Column(db.Text, nullable=False, default="{}")
     updated_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow, onupdate=utcnow)
+
+
+class CommentSource(db.Model):
+    """De dónde leer los comentarios de una transmisión (YouTube y/o Facebook)."""
+
+    __tablename__ = "comment_sources"
+
+    broadcast_id = db.Column(db.Integer, db.ForeignKey("broadcasts.id"), primary_key=True)
+    youtube_video_id = db.Column(db.String(11), nullable=True)
+    youtube_chat_id = db.Column(db.String(128), nullable=True)   # se resuelve una vez
+    youtube_page_token = db.Column(db.String(256), nullable=True)  # para pedir solo los nuevos
+    facebook_video_id = db.Column(db.String(32), nullable=True)
+    facebook_since = db.Column(db.Integer, nullable=True)  # unix: último comentario visto
+
+    def to_dict(self):
+        return {"youtube": self.youtube_video_id or "", "facebook": self.facebook_video_id or ""}

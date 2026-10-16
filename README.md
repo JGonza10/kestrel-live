@@ -46,6 +46,14 @@ Egress (en Docker) abre la página `/salida` de Vite y transmite exactamente el 
 
 Tus banners, el estilo y el guion del teleprompter se guardan en tu cuenta, así que los tienes en cualquier transmisión y en cualquier navegador.
 
+### Comentarios en escena
+
+1. Pon tus llaves en `.env`: `YOUTUBE_API_KEY` (Google Cloud, *YouTube Data API v3*) y/o `FACEBOOK_PAGE_TOKEN` (token de tu Página).
+2. Ya en vivo, en el estudio abre **Comentarios** y pega el link del video en vivo de YouTube y/o el id del video de Facebook.
+3. Los comentarios llegan solos cada 5 s o más (respetando lo que pide YouTube para no gastar tu cuota). Toca uno para mostrarlo en escena; vuelve a tocarlo para quitarlo. Sale al aire, y tus invitados también lo ven.
+
+Las llaves solo viven en `.env`: nunca se guardan en la base ni llegan al navegador.
+
 ### Invitados
 
 En el estudio, **Tras bastidores → Copiar link de invitado**. Quien abra el link escribe su nombre y entra tras bastidores; tú decides cuándo sale en escena. El invitado ve el mismo lienzo que el público, tiene mic, cámara, presentar pantalla y el chat privado.
@@ -66,6 +74,7 @@ En el estudio, **Tras bastidores → Copiar link de invitado**. Quien abra el li
 | `LIVEKIT_API_KEY` / `LIVEKIT_API_SECRET` | Llaves compartidas entre Flask, LiveKit y Egress. |
 | `LIVEKIT_URL` / `LIVEKIT_WS_URL` | Dónde está LiveKit (API y WebSocket). |
 | `SESSION_COOKIE_SECURE`, `SESSION_HOURS`, `LOGIN_MAX_ATTEMPTS`, `LOGIN_LOCK_MINUTES` | Ajustes de sesión y bloqueo de login. |
+| `YOUTUBE_API_KEY` / `FACEBOOK_PAGE_TOKEN` | Opcionales: leer los comentarios en vivo para ponerlos en escena. |
 | `EGRESS_TEMPLATE_URL` | Página que Egress abre para que lo que sale al aire sea igual al lienzo. Vacía = plantilla de LiveKit. |
 
 ## Seguridad incluida
@@ -97,6 +106,6 @@ Por ahora es **solo local**. El video necesita puertos UDP (50000-50100) que Rai
 - [x] Estudio con LiveKit y botón Salir en vivo / Grabar
 - [x] Invitados por link (token de solo-invitado)
 - [x] Escenas, banners, logo y temas de nombres (como en el prototipo), guardados en el servidor y idénticos al aire
-- [ ] Comentarios del chat de YouTube y Facebook en pantalla
+- [x] Comentarios del chat de YouTube y Facebook en pantalla
 - [ ] IA: subtítulos en vivo, moderación del chat, resumen, capítulos y clips verticales
 - [ ] Biblioteca de grabaciones

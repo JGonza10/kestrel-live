@@ -12,8 +12,8 @@ const MAX_BYTES = 4000
 // (host-<id>); los invitados son guest-<hex>, así que no pueden hacerse pasar por él.
 export const isHost = (identity) => typeof identity === 'string' && identity.startsWith('host-')
 
-export function encodeStage({ layout, ids, style, banner }) {
-  const msg = { v: 1, layout, ids, style, banner: banner || null }
+export function encodeStage({ layout, ids, style, banner, comment }) {
+  const msg = { v: 1, layout, ids, style, banner: banner || null, comment: comment || null }
   return new TextEncoder().encode(JSON.stringify(msg))
 }
 
@@ -41,7 +41,18 @@ export function parseStage(payload, senderIdentity) {
     showLogo: s.showLogo !== false
   }
   const banner = typeof msg.banner === 'string' && msg.banner.length <= BANNER_MAX ? msg.banner : null
-  return { layout: msg.layout, ids, style, banner }
+  return { layout: msg.layout, ids, style, banner, comment: cleanComment(msg.comment) }
+}
+
+export const COMMENT_PLATFORMS = ['youtube', 'facebook']
+
+// Comentario en escena: autor y texto cortos, de una plataforma conocida.
+export function cleanComment(c) {
+  if (!c || typeof c !== 'object') return null
+  const author = typeof c.author === 'string' ? c.author.slice(0, 80) : ''
+  const text = typeof c.text === 'string' ? c.text.slice(0, 300) : ''
+  if (!text || !COMMENT_PLATFORMS.includes(c.platform)) return null
+  return { author: author || 'Alguien', text, platform: c.platform }
 }
 
 // Link que se comparte: https://mi-laptop:5173/invitado/<código>

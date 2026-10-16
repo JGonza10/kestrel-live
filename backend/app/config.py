@@ -37,6 +37,10 @@ class Config:
     LIVEKIT_WS_URL = os.getenv("LIVEKIT_WS_URL", "ws://localhost:7880")
     LIVEKIT_API_KEY = os.getenv("LIVEKIT_API_KEY")
     LIVEKIT_API_SECRET = os.getenv("LIVEKIT_API_SECRET")
+    # Comentarios en vivo (opcionales)
+    YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
+    FACEBOOK_PAGE_TOKEN = os.getenv("FACEBOOK_PAGE_TOKEN")
+
     # Página que Egress abre para componer la salida (vacío = plantilla de LiveKit).
     EGRESS_TEMPLATE_URL = os.getenv("EGRESS_TEMPLATE_URL", "http://host.docker.internal:5173/salida").strip()
 

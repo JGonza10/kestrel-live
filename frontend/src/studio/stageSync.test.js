@@ -5,7 +5,8 @@ const state = {
   layout: 'duo',
   ids: ['host-1:camera', 'guest-0123456789ab:camera'],
   style: { theme: 'classic', color: '#1f3a4d', showNames: true, showLogo: false },
-  banner: 'Bienvenidos'
+  banner: 'Bienvenidos',
+  comment: { author: 'Ana', text: '¡Saludos!', platform: 'youtube' }
 }
 const raw = (obj) => new TextEncoder().encode(JSON.stringify(obj))
 
@@ -41,6 +42,17 @@ describe('parseStage', () => {
     expect(out.ids).toEqual(['a', 'b'])
     expect(out.style).toEqual({ theme: 'bubble', color: '#a85a22', showNames: true, showLogo: true })
     expect(out.banner).toBeNull()
+  })
+})
+
+describe('comentario en escena', () => {
+  it('descarta plataformas desconocidas y recorta textos largos', () => {
+    const base = { v: 1, layout: 'duo', ids: [] }
+    expect(parseStage(raw({ ...base, comment: { author: 'x', text: 'hola', platform: 'myspace' } }), 'host-1').comment).toBeNull()
+    const long = parseStage(raw({ ...base, comment: { author: 'a'.repeat(200), text: 't'.repeat(900), platform: 'facebook' } }), 'host-1').comment
+    expect(long.author).toHaveLength(80)
+    expect(long.text).toHaveLength(300)
+    expect(parseStage(raw(base), 'host-1').comment).toBeNull()
   })
 })
 

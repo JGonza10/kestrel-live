@@ -203,6 +203,7 @@ function GuestRoom({ title, error, setError }) {
             onStage={onStage}
             style={stage?.style || DEFAULT_STYLE}
             banner={stage?.banner}
+            comment={stage?.comment}
             emptyText={stage ? 'Nadie está en escena todavía' : 'Esperando al anfitrión…'}
           />
           <p className="muted small">

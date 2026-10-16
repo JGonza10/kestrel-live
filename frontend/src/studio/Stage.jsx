@@ -20,7 +20,7 @@ function Tile({ source, style, small }) {
   )
 }
 
-export default function Stage({ layout, onStage, style, banner, emptyText = 'Agrega a alguien a la escena desde Tras bastidores' }) {
+export default function Stage({ layout, onStage, style, banner, comment, emptyText = 'Agrega a alguien a la escena desde Tras bastidores' }) {
   const comp = composeStage(layout, onStage)
   const brand = { '--brand': style.color }
 
@@ -50,6 +50,16 @@ export default function Stage({ layout, onStage, style, banner, emptyText = 'Agr
 
       {style.showLogo && (
         <div className="canvas-logo"><Logo size={18} />Kestrel AI</div>
+      )}
+
+      {comment && (
+        <div className={`canvas-comment theme-${style.theme}`}>
+          <span className={`badge ${comment.platform}`} aria-hidden="true">{comment.platform === 'youtube' ? 'YT' : 'FB'}</span>
+          <div>
+            <strong>{comment.author}</strong>
+            <p>{comment.text}</p>
+          </div>
+        </div>
       )}
 
       {banner && <div className={`canvas-banner theme-${style.theme}`}>{banner}</div>}

@@ -204,6 +204,87 @@ function AiTab({ prompter, onPrompter, showPrompter, onShowPrompter }) {
   )
 }
 
+function CommentsTab({ comments, active, onToggle, filtered }) {
+  const { sources, saveSources, items, errors } = comments
+  const [yt, setYt] = useState(sources.youtube)
+  const [fb, setFb] = useState(sources.facebook)
+  const [fieldErrors, setFieldErrors] = useState({})
+  const [saving, setSaving] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const endRef = useRef(null)
+  const connected = Boolean(sources.youtube || sources.facebook)
+
+  useEffect(() => {
+    setYt(sources.youtube)
+    setFb(sources.facebook)
+  }, [sources])
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ block: 'nearest' })
+  }, [items.length])
+
+  const save = async (e) => {
+    e.preventDefault()
+    setSaving(true)
+    setFieldErrors({})
+    try {
+      await saveSources({ youtube: yt, facebook: fb })
+      setEditing(false)
+    } catch (err) {
+      setFieldErrors(err.fields || { general: err.message })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="stack">
+      {(!connected || editing) ? (
+        <form className="stack" onSubmit={save}>
+          <p className="muted small">Pega el link de tu video en vivo y aquí llegarán los comentarios para ponerlos en escena.</p>
+          <label htmlFor="src-yt">YouTube (link del video en vivo)</label>
+          <input id="src-yt" value={yt} maxLength={300} onChange={(e) => setYt(e.target.value)} placeholder="https://youtube.com/live/…" />
+          {fieldErrors.youtube && <span className="error">{fieldErrors.youtube}</span>}
+          <label htmlFor="src-fb">Facebook (id o link del video en vivo)</label>
+          <input id="src-fb" value={fb} maxLength={300} onChange={(e) => setFb(e.target.value)} placeholder="https://facebook.com/…/videos/123…" />
+          {fieldErrors.facebook && <span className="error">{fieldErrors.facebook}</span>}
+          {fieldErrors.general && <span className="error">{fieldErrors.general}</span>}
+          <button className="btn" type="submit" disabled={saving}>{saving ? 'Guardando…' : 'Conectar chats'}</button>
+        </form>
+      ) : (
+        <div className="toggle-row">
+          <span className="muted small">
+            Leyendo {[sources.youtube && 'YouTube', sources.facebook && 'Facebook'].filter(Boolean).join(' y ')}
+          </span>
+          <button className="btn small-btn" onClick={() => setEditing(true)}>Cambiar</button>
+        </div>
+      )}
+
+      {Object.entries(errors).map(([p, msg]) => <p key={p} className="error" role="status">{msg}</p>)}
+      {filtered > 0 && <p className="muted small">Kestrel IA ocultó {filtered} comentario{filtered === 1 ? '' : 's'} (spam o insultos).</p>}
+
+      <div className="chat-list comments-list" aria-live="polite">
+        {connected && items.length === 0 && <p className="muted small">Esperando comentarios…</p>}
+        {items.map((c) => (
+          <button
+            type="button" key={c.id} className="comment-item" aria-pressed={active === c.id}
+            onClick={() => onToggle(c)}
+          >
+            <span className={`badge ${c.platform}`} aria-hidden="true">{c.platform === 'youtube' ? 'YT' : 'FB'}</span>
+            <span className="grow">
+              <strong className="small">{c.author}</strong>
+              <span className="small">{c.text}</span>
+            </span>
+            <strong className="small comment-cta">{active === c.id ? 'EN ESCENA' : 'Mostrar'}</strong>
+          </button>
+        ))}
+        <div ref={endRef} />
+      </div>
+      {items.length > 0 && <p className="muted small">Toca un comentario para mostrarlo u ocultarlo en la escena.</p>}
+    </div>
+  )
+}
+
 function Soon({ text }) {
   return <p className="muted small">{text}</p>
 }
@@ -241,7 +322,9 @@ export default function SidePanel(props) {
           />
         )}
         {tab === 'estilo' && <StyleTab style={props.style} onStyle={props.onStyle} />}
-        {tab === 'comentarios' && <Soon text="Pronto: los comentarios de YouTube y Facebook llegarán aquí y podrás ponerlos en escena." />}
+        {tab === 'comentarios' && (
+          <CommentsTab comments={props.comments} active={props.activeComment?.id} onToggle={props.onToggleComment} filtered={props.filteredCount || 0} />
+        )}
         {tab === 'widgets' && <Soon text="Pronto: encuestas y código QR en escena, y encuestas sugeridas por la IA." />}
         {tab === 'chat' && <PrivateChat />}
         {tab === 'ia' && (

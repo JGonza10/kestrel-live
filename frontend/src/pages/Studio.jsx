@@ -14,6 +14,7 @@ import DeviceSettings from '../studio/DeviceSettings.jsx'
 import SidePanel, { SWATCHES, abbr } from '../studio/SidePanel.jsx'
 import { LAYOUTS, SCENES, destSummary, egressLayout, formatClock, initials } from '../studio/layouts.js'
 import { useServerLook } from '../studio/useServerLook.js'
+import { useComments } from '../studio/useComments.js'
 import { STAGE_TOPIC, encodeStage, guestLink, isGuest } from '../studio/stageSync.js'
 import { useStageSources } from '../studio/useStageSources.js'
 import '../studio/studio.css'
@@ -186,12 +187,20 @@ function StudioRoom({ broadcast, setBroadcast, dests, studioOutput, error, setEr
   const setPrompter = (text) => setLook((l) => ({ ...l, prompter: text.slice(0, 5000) }))
   const bannerText = banners.find((b) => b.id === activeBanner)?.text
 
+  // --- Comentarios de YouTube y Facebook ---
+  const comments = useComments(id)
+  const [activeComment, setActiveComment] = useState(null)
+  const toggleComment = (c) => setActiveComment((a) => (a?.id === c.id ? null : c))
+  const commentOnAir = activeComment
+    ? { author: activeComment.author, text: activeComment.text, platform: activeComment.platform }
+    : null
+
   // --- Invitados y salida al aire ven el mismo lienzo: se manda por el canal de datos ---
   // Egress entra como participante oculto (no aparece en la lista), por eso se publica
   // siempre, y más seguido mientras se transmite para que arranque rápido.
   const { send: sendStage } = useDataChannel(STAGE_TOPIC)
   const remoteCount = useRemoteParticipants().length
-  const stageKey = JSON.stringify({ layout, ids: stageIds, style, banner: bannerText || null })
+  const stageKey = JSON.stringify({ layout, ids: stageIds, style, banner: bannerText || null, comment: commentOnAir })
   const running = ['live', 'recording'].includes(broadcast.status)
   useEffect(() => {
     const publish = () => {
@@ -310,7 +319,7 @@ function StudioRoom({ broadcast, setBroadcast, dests, studioOutput, error, setEr
             <div className="prompter" aria-label="Teleprompter (solo tú lo ves)">{look.prompter}</div>
           )}
 
-          <Stage layout={layout} onStage={onStage} style={style} banner={bannerText} />
+          <Stage layout={layout} onStage={onStage} style={style} banner={bannerText} comment={commentOnAir} />
 
           <div className="layout-bar" role="group" aria-label="Diseño">
             <span className="section-label">DISEÑO</span>
@@ -389,6 +398,9 @@ function StudioRoom({ broadcast, setBroadcast, dests, studioOutput, error, setEr
           onPrompter={setPrompter}
           showPrompter={showPrompter}
           onShowPrompter={setShowPrompter}
+          comments={comments}
+          activeComment={activeComment}
+          onToggleComment={toggleComment}
         />
       </div>
     </>

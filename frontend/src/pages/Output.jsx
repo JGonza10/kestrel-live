@@ -73,7 +73,7 @@ function OutputStage() {
 
   return (
     <div className="output-frame" style={{ width: BASE_W, transform: `scale(${scale})` }}>
-      <Stage layout={current.layout} onStage={onStage} style={current.style} banner={current.banner} emptyText="" />
+      <Stage layout={current.layout} onStage={onStage} style={current.style} banner={current.banner} comment={current.comment} emptyText="" />
     </div>
   )
 }

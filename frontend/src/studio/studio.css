@@ -247,3 +247,26 @@ textarea { font: inherit; font-size: 14px; padding: 10px; border: 1px solid var(
 .output-root { width: 100vw; height: 100vh; overflow: hidden; background: #13222e; }
 .output-frame { transform-origin: top left; }
 .output-frame .canvas { border-radius: 0; }
+
+/* Comentarios del chat */
+.comments-list { max-height: 420px; }
+.comment-item {
+  display: flex; align-items: flex-start; gap: 10px; width: 100%; min-height: 44px; padding: 8px 10px; text-align: left;
+  border: 2px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text); font: inherit; cursor: pointer;
+}
+.comment-item .grow { gap: 2px; overflow-wrap: anywhere; }
+.comment-item[aria-pressed='true'] { border-color: var(--accent); background: var(--accent-tint); }
+.comment-cta { color: var(--accent-strong); white-space: nowrap; }
+.canvas-comment {
+  position: absolute; left: 4%; top: 6%; max-width: 55%; display: flex; gap: 8px; align-items: flex-start;
+  padding: 1.2% 1.6%; background: rgba(255, 255, 255, 0.95); color: var(--text); border-left: 4px solid var(--brand);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25); font-size: clamp(10px, 1.5vw, 16px);
+}
+.canvas-comment .badge { min-width: 2.2em; height: 1.8em; font-size: 0.8em; flex: none; }
+.canvas-comment strong { display: block; color: var(--brand); }
+.canvas-comment p { margin: 2px 0 0; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.theme-bubble.canvas-comment { border-radius: 14px; }
+.theme-classic.canvas-comment { border-radius: 4px; }
+.theme-minimal.canvas-comment { background: rgba(0, 0, 0, 0.6); color: #fff; border-left: none; border-bottom: 3px solid var(--brand); }
+.theme-minimal.canvas-comment strong { color: #fff; }
+.theme-block.canvas-comment { border-radius: 0; }
