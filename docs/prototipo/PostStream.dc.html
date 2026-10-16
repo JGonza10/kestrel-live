@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Kestrel Live · Resumen con IA</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:#F4F5F7;color:#171A21}
+a{color:#A85A22}a:hover{color:#1F3A4D}
+button{font-family:inherit}
+button:focus-visible,a:focus-visible{outline:2px solid #C9702F;outline-offset:2px}
+</style>
+</helmet>
+<div style="min-height: 940px; background: #F4F5F7; display: flex; flex-direction: column">
+  <header style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding: 14px 24px; background: #1F3A4D; color: #FFFFFF">
+    <a href="Broadcasts.dc.html" style="color: #FFFFFF; text-decoration: none; font-size: 14px; display: inline-flex; align-items: center; min-height: 44px">← Transmisiones</a>
+    <div style="display: flex; align-items: center; gap: 10px">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 13c3-6 8-9 13-9-1 3-1 5 1 6-2 1-4 1-6 0 1 2 3 3 6 3-3 3-8 4-11 2 1 2 3 3 5 3-4 1-8 0-8-5z" fill="#C9702F"></path></svg>
+      <span style="font-family: Georgia, 'Iowan Old Style', serif; font-size: 19px">Kestrel Live</span>
+    </div>
+  </header>
+
+  <main style="width: 100%; max-width: 1280px; margin: 0 auto; padding: 32px 24px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <span style="font-size: 12px; font-weight: 700; letter-spacing: 0.08em; color: #A85A22">TRANSMISIÓN FINALIZADA · PROCESADA CON IA</span>
+        <h1 style="margin: 0; font-family: Georgia, 'Iowan Old Style', serif; font-weight: 400; font-size: 34px">[Título de la transmisión]</h1>
+        <span style="font-size: 14px; color: #5B6272">[Fecha] · [Duración] · YouTube, Facebook</span>
+      </div>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap">
+        <button style="min-height: 44px; padding: 0 16px; border-radius: 10px; border: 1px solid #DBDFE6; background: #FFFFFF; color: #171A21; font-size: 15px; cursor: pointer">Descargar grabación</button>
+        <button style="min-height: 44px; padding: 0 16px; border-radius: 10px; border: 1px solid #DBDFE6; background: #FFFFFF; color: #171A21; font-size: 15px; cursor: pointer">Editar</button>
+        <button style="min-height: 44px; padding: 0 16px; border-radius: 10px; border: 1px solid #DBDFE6; background: #FFFFFF; color: #171A21; font-size: 15px; cursor: pointer">Subtítulos (.srt)</button>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start">
+      <section aria-label="Resumen" style="flex: 999 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+        <div style="background: #FFFFFF; border: 1px solid #DBDFE6; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 10px">
+          <h2 style="margin: 0; font-size: 17px">Resumen generado por IA</h2>
+          <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #171A21">[Aquí la IA escribe en 3–4 líneas de qué trató la transmisión, los puntos clave y las preguntas más repetidas del público.]</p>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap">
+            <button style="min-height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid #DBDFE6; background: #FFFFFF; color: #A85A22; font-size: 13px; font-weight: 600; cursor: pointer">Copiar como descripción de YouTube</button>
+            <button style="min-height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid #DBDFE6; background: #FFFFFF; color: #A85A22; font-size: 13px; font-weight: 600; cursor: pointer">Generar post para LinkedIn</button>
+          </div>
+        </div>
+
+        <div style="background: #FFFFFF; border: 1px solid #DBDFE6; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+          <h2 style="margin: 0; font-size: 17px">Capítulos</h2>
+          <sc-for list="{{chapters}}" as="ch" hint-placeholder-count="4">
+            <div style="display: flex; gap: 14px; align-items: baseline; padding-bottom: 10px; border-bottom: 1px solid #ECEEF2">
+              <span style="font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 14px; color: #A85A22; min-width: 56px">{{ch.t}}</span>
+              <span style="font-size: 15px">{{ch.label}}</span>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+
+      <section aria-label="Clips sugeridos" style="flex: 1 1 380px; min-width: 0; background: #FFFFFF; border: 1px solid #DBDFE6; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <h2 style="margin: 0; font-size: 17px">Clips verticales sugeridos</h2>
+          <span style="font-size: 13px; color: #5B6272">Listos para Reels, Shorts y TikTok. Elige cuáles publicar.</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+          <sc-for list="{{clips}}" as="cl" hint-placeholder-count="3">
+            <button onClick="{{cl.toggle}}" aria-pressed="{{cl.on}}" style="{{cl.style}}">
+              <span style="width: 100%; aspect-ratio: 9 / 16; border-radius: 8px; background: #1F3A4D; position: relative; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 12%; box-sizing: border-box">
+                <span style="padding: 3px 6px; border-radius: 4px; background: #A85A22; color: #FFFFFF; font-size: 11px; font-weight: 600">{{cl.dur}}</span>
+                <span style="{{cl.checkStyle}}">✓</span>
+              </span>
+              <span style="font-size: 13px; text-align: left; line-height: 1.3">{{cl.label}}</span>
+            </button>
+          </sc-for>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center">
+          <span style="font-size: 13px; color: #5B6272">Publicar en:</span>
+          <sc-for list="{{targets}}" as="tg" hint-placeholder-count="3">
+            <button onClick="{{tg.toggle}}" aria-pressed="{{tg.on}}" style="{{tg.style}}">{{tg.label}}</button>
+          </sc-for>
+        </div>
+        <button style="{{publishStyle}}">{{publishLabel}}</button>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":940}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { clips: { k1: true, k2: true, k3: false }, targets: { ig: true, yt: true, tt: false } };
+  }
+  renderVals() {
+    const s = this.state;
+    const set = (o) => this.setState(o);
+    const chapters = [
+      { t: '00:00', label: '[Intro y bienvenida]' },
+      { t: '[mm:ss]', label: '[Tema principal detectado por IA]' },
+      { t: '[mm:ss]', label: '[Demostración en pantalla]' },
+      { t: '[mm:ss]', label: '[Preguntas del público]' },
+      { t: '[mm:ss]', label: '[Cierre y llamada a la acción]' }
+    ];
+    const clipDefs = [
+      { id: 'k1', label: '[Momento clave 1]', dur: '0:45' },
+      { id: 'k2', label: '[Mejor respuesta del Q&A]', dur: '0:58' },
+      { id: 'k3', label: '[Momento clave 3]', dur: '0:30' }
+    ];
+    const clips = clipDefs.map((c) => {
+      const on = !!s.clips[c.id];
+      return {
+        label: c.label, dur: c.dur, on,
+        style: 'display: flex; flex-direction: column; gap: 6px; padding: 6px; border-radius: 10px; cursor: pointer; background: #FFFFFF; color: #171A21; border: 2px solid ' + (on ? '#C9702F' : '#DBDFE6'),
+        checkStyle: 'position: absolute; top: 6px; right: 6px; width: 22px; height: 22px; border-radius: 50%; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; ' + (on ? 'background: #A85A22; color: #FFFFFF' : 'background: rgba(255,255,255,0.25); color: transparent'),
+        toggle: () => set({ clips: Object.assign({}, s.clips, { [c.id]: !on }) })
+      };
+    });
+    const targetDefs = [{ id: 'ig', label: 'Instagram Reels' }, { id: 'yt', label: 'YouTube Shorts' }, { id: 'tt', label: 'TikTok' }];
+    const targets = targetDefs.map((t) => {
+      const on = !!s.targets[t.id];
+      return {
+        label: t.label, on,
+        style: 'min-height: 36px; padding: 0 12px; border-radius: 999px; cursor: pointer; font-size: 13px; font-weight: 600; ' + (on ? 'background: #1F3A4D; color: #FFFFFF; border: 1px solid #1F3A4D' : 'background: #FFFFFF; color: #5B6272; border: 1px solid #DBDFE6'),
+        toggle: () => set({ targets: Object.assign({}, s.targets, { [t.id]: !on }) })
+      };
+    });
+    const nc = clipDefs.filter((c) => s.clips[c.id]).length;
+    const nt = targetDefs.filter((t) => s.targets[t.id]).length;
+    const ok = nc > 0 && nt > 0;
+    return {
+      chapters, clips, targets,
+      publishLabel: ok ? 'Publicar ' + nc + (nc === 1 ? ' clip' : ' clips') + ' en ' + nt + (nt === 1 ? ' red' : ' redes') : 'Elige al menos un clip y una red',
+      publishStyle: 'min-height: 48px; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; ' + (ok ? 'background: #A85A22; color: #FFFFFF; border: 1px solid #A85A22' : 'background: #ECEEF2; color: #5B6272; border: 1px solid #DBDFE6')
+    };
+  }
+}
+</script>
+</body>
+</html>

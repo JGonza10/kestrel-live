@@ -1,0 +1,54 @@
+# Servicios de apoyo para correr Kestrel Live en la laptop (Docker Desktop en Windows).
+# Las llaves salen del archivo .env (nunca se escriben aquí).
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-kestrel}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en .env}
+      POSTGRES_DB: ${POSTGRES_DB:-kestrel_live}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "127.0.0.1:6379:6379"
+
+  # Servidor de video en tiempo real (WebRTC)
+  livekit:
+    image: livekit/livekit-server:v1.13.7
+    command: --config /etc/livekit.yaml
+    environment:
+      LIVEKIT_KEYS: "${LIVEKIT_API_KEY:?Define LIVEKIT_API_KEY}: ${LIVEKIT_API_SECRET:?Define LIVEKIT_API_SECRET}"
+    ports:
+      - "7880:7880"            # API y señalización
+      - "7881:7881"            # WebRTC por TCP
+      - "50000-50100:50000-50100/udp"  # WebRTC por UDP
+    volumes:
+      - ./livekit/livekit.yaml:/etc/livekit.yaml:ro
+    depends_on:
+      - redis
+
+  # Egress: compone la escena y la manda por RTMP a las redes o la graba en MP4
+  egress:
+    image: livekit/egress:v1.14.1
+    cap_add:
+      - SYS_ADMIN
+    environment:
+      EGRESS_CONFIG_BODY: |
+        api_key: ${LIVEKIT_API_KEY}
+        api_secret: ${LIVEKIT_API_SECRET}
+        ws_url: ws://livekit:7880
+        redis:
+          address: redis:6379
+        log_level: info
+    volumes:
+      - ./recordings:/out
+    depends_on:
+      - livekit
+
+volumes:
+  pgdata:
