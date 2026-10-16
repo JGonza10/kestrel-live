@@ -18,6 +18,9 @@ def test_save_and_load_look(logged):
     look = logged.get("/api/studio/look").get_json()["look"]
     assert look["banners"] == [{"id": "b1", "text": "Escríbenos por WhatsApp"}]
     assert look["style"] == LOOK["style"] and look["prompter"] == "Hola a todos"
+    assert look["ai"] == {"captions": False, "moderation": True}  # valores por defecto
+    logged.put("/api/studio/look", json={**LOOK, "ai": {"captions": True, "moderation": "no"}}, headers=HEADERS)
+    assert logged.get("/api/studio/look").get_json()["look"]["ai"] == {"captions": True, "moderation": True}
 
 
 def test_look_validation(logged):

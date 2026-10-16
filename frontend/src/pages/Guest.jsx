@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import {
   LiveKitRoom,
   RoomAudioRenderer,
   useDataChannel,
   useLocalParticipant,
+  useRemoteParticipants,
   useRoomContext
 } from '@livekit/components-react'
 import { DisconnectReason } from 'livekit-client'
@@ -13,7 +14,8 @@ import Logo from '../components/Logo.jsx'
 import Stage from '../studio/Stage.jsx'
 import DeviceSettings from '../studio/DeviceSettings.jsx'
 import { PrivateChat } from '../studio/SidePanel.jsx'
-import { STAGE_TOPIC, parseStage } from '../studio/stageSync.js'
+import { CAPTION_TOPIC, STAGE_TOPIC, encodeCaption, isHost, parseStage } from '../studio/stageSync.js'
+import { useSpeechCaptions } from '../studio/useSpeechCaptions.js'
 import { useStageSources } from '../studio/useStageSources.js'
 import '../studio/studio.css'
 
@@ -180,6 +182,25 @@ function GuestRoom({ title, error, setError }) {
     }
   }
 
+  // Si el anfitrión activó subtítulos, tu voz se transcribe aquí y se le manda solo a él.
+  const { send: sendCaption } = useDataChannel(CAPTION_TOPIC)
+  const hostIds = useRemoteParticipants().filter((p) => isHost(p.identity)).map((p) => p.identity)
+  const lastInterim = useRef(0)
+  const captionsOn = Boolean(stage?.captions) && isMicrophoneEnabled && hostIds.length > 0
+  const shareCaption = (text, final) => {
+    const now = Date.now()
+    if (!final && now - lastInterim.current < 300) return // no saturar el canal con cada sílaba
+    lastInterim.current = now
+    Promise.resolve(
+      sendCaption(encodeCaption(text, final), { reliable: final, destinationIdentities: hostIds })
+    ).catch(() => {})
+  }
+  useSpeechCaptions({
+    enabled: captionsOn,
+    onInterim: (t) => shareCaption(t, false),
+    onFinal: (t) => shareCaption(t, true)
+  })
+
   return (
     <>
       <GuestBar title={title} inRoom>
@@ -204,12 +225,14 @@ function GuestRoom({ title, error, setError }) {
             style={stage?.style || DEFAULT_STYLE}
             banner={stage?.banner}
             comment={stage?.comment}
+            caption={stage?.caption}
             emptyText={stage ? 'Nadie está en escena todavía' : 'Esperando al anfitrión…'}
           />
           <p className="muted small">
             {amOnStage
               ? 'Estás en escena: lo que digas y muestres se ve en la transmisión.'
               : 'Estás tras bastidores: el público no te ve ni te escucha. El anfitrión sí.'}
+            {captionsOn && ' Subtítulos en vivo activados: tu voz se transcribe en este navegador.'}
           </p>
 
           {me && !amOnStage && (

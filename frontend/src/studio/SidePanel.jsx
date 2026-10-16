@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useChat } from '@livekit/components-react'
 import { BANNER_MAX, cleanBanner } from './layouts.js'
+import { speechSupported } from './useSpeechCaptions.js'
 
 export const THEMES = [
   ['bubble', 'Burbuja'],
@@ -175,25 +176,45 @@ export function PrivateChat() {
   )
 }
 
-function AiTab({ prompter, onPrompter, showPrompter, onShowPrompter }) {
-  const soon = [
-    ['Subtítulos en vivo', 'Transcribe lo que se dice y lo muestra en escena.'],
-    ['Traducción', 'Subtítulos en otro idioma.'],
-    ['Moderación del chat', 'Oculta spam e insultos automáticamente.'],
-    ['Pregunta destacada', 'Elige la mejor pregunta del chat.']
-  ]
+function AiTab({ prompter, onPrompter, showPrompter, onShowPrompter, ai, onAi }) {
+  const canCaption = speechSupported()
   return (
     <div className="stack">
       <p className="muted small">Asistente Kestrel durante la transmisión.</p>
-      {soon.map(([label, desc]) => (
-        <div className="toggle-row boxed" key={label}>
-          <div className="grow">
-            <strong className="small">{label}</strong>
-            <span className="muted small">{desc}</span>
-          </div>
-          <span className="soon">Pronto</span>
+      <div className="toggle-row boxed">
+        <div className="grow">
+          <strong className="small">Subtítulos en vivo</strong>
+          <span className="muted small">
+            {canCaption
+              ? 'Transcribe lo que se dice, lo muestra en escena y arma el resumen al terminar.'
+              : 'Tu navegador no los soporta. Usa Chrome o Edge.'}
+          </span>
         </div>
-      ))}
+        <Switch on={ai.captions && canCaption} onChange={(v) => onAi({ captions: v })} label="Subtítulos en vivo" disabled={!canCaption} />
+      </div>
+      <div className="toggle-row boxed">
+        <div className="grow">
+          <strong className="small">Moderación del chat</strong>
+          <span className="muted small">Oculta spam, links e insultos de los comentarios.</span>
+        </div>
+        <Switch on={ai.moderation} onChange={(v) => onAi({ moderation: v })} label="Moderación del chat" />
+      </div>
+      <div className="toggle-row boxed">
+        <div className="grow">
+          <strong className="small">Pregunta destacada</strong>
+          <span className="muted small">En la pestaña Comentarios: la IA elige la mejor pregunta del chat.</span>
+        </div>
+      </div>
+      <div className="toggle-row boxed">
+        <div className="grow">
+          <strong className="small">Traducción</strong>
+          <span className="muted small">Subtítulos en otro idioma.</span>
+        </div>
+        <span className="soon">Pronto</span>
+      </div>
+      {ai.captions && canCaption && (
+        <p className="muted small">El reconocimiento de voz de Chrome envía el audio a Google para transcribirlo.</p>
+      )}
       <label htmlFor="tp">Teleprompter</label>
       <textarea id="tp" rows={5} maxLength={5000} value={prompter} onChange={(e) => onPrompter(e.target.value)} placeholder="Pega tu guion aquí" />
       <div className="toggle-row">
@@ -204,14 +225,28 @@ function AiTab({ prompter, onPrompter, showPrompter, onShowPrompter }) {
   )
 }
 
-function CommentsTab({ comments, active, onToggle, filtered }) {
+function CommentsTab({ comments, active, onToggle, filtered, onHighlight, highlightNote }) {
   const { sources, saveSources, items, errors } = comments
   const [yt, setYt] = useState(sources.youtube)
   const [fb, setFb] = useState(sources.facebook)
   const [fieldErrors, setFieldErrors] = useState({})
   const [saving, setSaving] = useState(false)
   const [editing, setEditing] = useState(false)
+  const [picking, setPicking] = useState(false)
+  const [pickError, setPickError] = useState('')
   const endRef = useRef(null)
+
+  const pick = async () => {
+    setPicking(true)
+    setPickError('')
+    try {
+      await onHighlight()
+    } catch (err) {
+      setPickError(err.message)
+    } finally {
+      setPicking(false)
+    }
+  }
   const connected = Boolean(sources.youtube || sources.facebook)
 
   useEffect(() => {
@@ -280,7 +315,16 @@ function CommentsTab({ comments, active, onToggle, filtered }) {
         ))}
         <div ref={endRef} />
       </div>
-      {items.length > 0 && <p className="muted small">Toca un comentario para mostrarlo u ocultarlo en la escena.</p>}
+      {items.length > 0 && (
+        <>
+          <button className="btn" onClick={pick} disabled={picking}>
+            {picking ? 'Kestrel IA está leyendo el chat…' : '✨ Pregunta destacada'}
+          </button>
+          {pickError && <p className="error" role="alert">{pickError}</p>}
+          {highlightNote && active && <p className="muted small" role="status">Kestrel IA: {highlightNote}</p>}
+          <p className="muted small">Toca un comentario para mostrarlo u ocultarlo en la escena.</p>
+        </>
+      )}
     </div>
   )
 }
@@ -323,12 +367,18 @@ export default function SidePanel(props) {
         )}
         {tab === 'estilo' && <StyleTab style={props.style} onStyle={props.onStyle} />}
         {tab === 'comentarios' && (
-          <CommentsTab comments={props.comments} active={props.activeComment?.id} onToggle={props.onToggleComment} filtered={props.filteredCount || 0} />
+          <CommentsTab
+            comments={props.comments} active={props.activeComment?.id} onToggle={props.onToggleComment}
+            filtered={props.filteredCount || 0} onHighlight={props.onHighlight} highlightNote={props.highlightNote}
+          />
         )}
         {tab === 'widgets' && <Soon text="Pronto: encuestas y código QR en escena, y encuestas sugeridas por la IA." />}
         {tab === 'chat' && <PrivateChat />}
         {tab === 'ia' && (
-          <AiTab prompter={props.prompter} onPrompter={props.onPrompter} showPrompter={props.showPrompter} onShowPrompter={props.onShowPrompter} />
+          <AiTab
+            prompter={props.prompter} onPrompter={props.onPrompter} showPrompter={props.showPrompter}
+            onShowPrompter={props.onShowPrompter} ai={props.ai} onAi={props.onAi}
+          />
         )}
       </div>
     </aside>

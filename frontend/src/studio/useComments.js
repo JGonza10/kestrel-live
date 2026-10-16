@@ -3,10 +3,11 @@ import { api } from '../api.js'
 import { mergeComments, nextPoll } from './comments.js'
 
 // Fuentes de comentarios de la transmisión y consulta periódica de los nuevos.
-export function useComments(broadcastId) {
+export function useComments(broadcastId, moderate = true) {
   const [sources, setSources] = useState({ youtube: '', facebook: '' })
   const [items, setItems] = useState([])
   const [errors, setErrors] = useState({})
+  const [filtered, setFiltered] = useState(0)
   const [version, setVersion] = useState(0) // cambia al guardar fuentes para reiniciar la consulta
   const timer = useRef(null)
 
@@ -19,9 +20,10 @@ export function useComments(broadcastId) {
     const poll = async () => {
       let wait = 15000 // si falla la consulta, se reintenta más tarde
       try {
-        const d = await api(`/broadcasts/${broadcastId}/comments`)
+        const d = await api(`/broadcasts/${broadcastId}/comments${moderate ? '?moderate=1' : ''}`)
         if (!alive) return
         setItems((prev) => mergeComments(prev, d.items))
+        if (d.filtered) setFiltered((n) => n + d.filtered)
         setErrors(d.errors || {})
         wait = nextPoll(d.poll_ms)
         if (wait === 0) return // sin fuentes: no hay nada que consultar
@@ -35,7 +37,7 @@ export function useComments(broadcastId) {
       alive = false
       clearTimeout(timer.current)
     }
-  }, [broadcastId, version])
+  }, [broadcastId, version, moderate])
 
   const saveSources = useCallback(
     async (next) => {
@@ -47,5 +49,5 @@ export function useComments(broadcastId) {
     [broadcastId]
   )
 
-  return { sources, saveSources, items, errors }
+  return { sources, saveSources, items, errors, filtered }
 }

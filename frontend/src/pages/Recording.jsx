@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { api } from '../api.js'
 import { formatClock } from '../studio/layouts.js'
 import { formatBytes, formatDate } from '../lib/format.js'
+import RecordingAi from './RecordingAi.jsx'
 
 // Una transmisión terminada: video, descarga y (abajo) lo que genera Kestrel IA.
 export default function Recording() {
@@ -10,6 +11,7 @@ export default function Recording() {
   const [item, setItem] = useState(null)
   const [file, setFile] = useState('')
   const [error, setError] = useState('')
+  const playerRef = useRef(null)
 
   const load = () =>
     api(`/recordings/${id}`)
@@ -56,7 +58,7 @@ export default function Recording() {
       <section className="rec-video">
         {src ? (
           <>
-            <video key={src} src={src} controls preload="metadata" className="player" />
+            <video key={src} ref={playerRef} src={src} controls preload="metadata" className="player" />
             {item.files.length > 1 && (
               <div className="stack">
                 <label htmlFor="rec-file">Parte</label>
@@ -76,6 +78,18 @@ export default function Recording() {
           </p>
         )}
       </section>
+
+      <RecordingAi
+        id={id}
+        hasVideo={Boolean(src)}
+        onSeek={(t) => {
+          const v = playerRef.current
+          if (!v) return
+          v.currentTime = t
+          v.play().catch(() => {})
+          v.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }}
+      />
     </>
   )
 }

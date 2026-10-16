@@ -270,3 +270,11 @@ textarea { font: inherit; font-size: 14px; padding: 10px; border: 1px solid var(
 .theme-minimal.canvas-comment { background: rgba(0, 0, 0, 0.6); color: #fff; border-left: none; border-bottom: 3px solid var(--brand); }
 .theme-minimal.canvas-comment strong { color: #fff; }
 .theme-block.canvas-comment { border-radius: 0; }
+
+/* Subtítulos en vivo */
+.canvas-caption {
+  position: absolute; left: 10%; right: 10%; bottom: 6%; padding: 0.8% 1.5%; text-align: center;
+  background: rgba(0, 0, 0, 0.72); color: #fff; border-radius: 6px; font-size: clamp(11px, 1.8vw, 19px); line-height: 1.35;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.canvas-caption.above-banner { bottom: 20%; }

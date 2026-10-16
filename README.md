@@ -54,6 +54,18 @@ Tus banners, el estilo y el guion del teleprompter se guardan en tu cuenta, así
 
 Las llaves solo viven en `.env`: nunca se guardan en la base ni llegan al navegador.
 
+### Kestrel IA
+
+En el estudio, pestaña **Kestrel IA**:
+
+- **Subtítulos en vivo** (Chrome o Edge, gratis): transcribe tu voz y la de tus invitados, la muestra en escena (sale al aire) y la guarda con sus tiempos. Chrome manda el audio a Google para transcribirlo.
+- **Moderación del chat**: oculta comentarios con insultos, links o spam. Son reglas locales: no se manda el chat a nadie.
+- **Pregunta destacada** (pestaña Comentarios): Claude elige la mejor pregunta del chat y la pone en escena.
+
+Al terminar, en **Biblioteca → Ver** tienes los subtítulos `.srt` y, con `ANTHROPIC_API_KEY`, el botón **Generar con Kestrel IA**: resumen, descripción para YouTube con capítulos, post para LinkedIn y clips verticales sugeridos. Cada clip se recorta a 1080×1920 en tu laptop con **ffmpeg** (en Windows: `winget install ffmpeg`).
+
+La transcripción y los comentarios se le pasan a Claude como datos, nunca como instrucciones, y su respuesta se valida (esquema JSON y tiempos dentro de la duración).
+
 ### Invitados
 
 En el estudio, **Tras bastidores → Copiar link de invitado**. Quien abra el link escribe su nombre y entra tras bastidores; tú decides cuándo sale en escena. El invitado ve el mismo lienzo que el público, tiene mic, cámara, presentar pantalla y el chat privado.
@@ -76,6 +88,7 @@ En el estudio, **Tras bastidores → Copiar link de invitado**. Quien abra el li
 | `SESSION_COOKIE_SECURE`, `SESSION_HOURS`, `LOGIN_MAX_ATTEMPTS`, `LOGIN_LOCK_MINUTES` | Ajustes de sesión y bloqueo de login. |
 | `YOUTUBE_API_KEY` / `FACEBOOK_PAGE_TOKEN` | Opcionales: leer los comentarios en vivo para ponerlos en escena. |
 | `RECORDINGS_DIR`, `RECORD_LIVE` | Carpeta de los MP4 (por defecto `recordings/`) y si las transmisiones en vivo también se graban (por defecto sí). |
+| `ANTHROPIC_API_KEY`, `AI_MODEL` | Opcionales: Kestrel IA (resumen, capítulos, clips, pregunta destacada) con Claude. |
 | `EGRESS_TEMPLATE_URL` | Página que Egress abre para que lo que sale al aire sea igual al lienzo. Vacía = plantilla de LiveKit. |
 
 ## Seguridad incluida
@@ -108,5 +121,7 @@ Por ahora es **solo local**. El video necesita puertos UDP (50000-50100) que Rai
 - [x] Invitados por link (token de solo-invitado)
 - [x] Escenas, banners, logo y temas de nombres (como en el prototipo), guardados en el servidor y idénticos al aire
 - [x] Comentarios del chat de YouTube y Facebook en pantalla
-- [ ] IA: subtítulos en vivo, moderación del chat, resumen, capítulos y clips verticales
+- [x] IA: subtítulos en vivo, moderación del chat, pregunta destacada, resumen, capítulos y clips verticales
+- [ ] Traducción de subtítulos en vivo
+- [ ] Publicar clips directo en Reels, Shorts y TikTok
 - [x] Biblioteca de grabaciones

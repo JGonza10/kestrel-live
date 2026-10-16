@@ -15,14 +15,17 @@ import SidePanel, { SWATCHES, abbr } from '../studio/SidePanel.jsx'
 import { LAYOUTS, SCENES, destSummary, egressLayout, formatClock, initials } from '../studio/layouts.js'
 import { useServerLook } from '../studio/useServerLook.js'
 import { useComments } from '../studio/useComments.js'
-import { STAGE_TOPIC, encodeStage, guestLink, isGuest } from '../studio/stageSync.js'
+import { useSpeechCaptions } from '../studio/useSpeechCaptions.js'
+import { makeSegment, takeBatch } from '../studio/transcript.js'
+import { CAPTION_TOPIC, STAGE_TOPIC, encodeStage, guestLink, isGuest, parseCaption } from '../studio/stageSync.js'
 import { useStageSources } from '../studio/useStageSources.js'
 import '../studio/studio.css'
 
 const DEFAULT_LOOK = {
   banners: [],
   style: { theme: 'bubble', color: SWATCHES[0][0], showNames: true, showLogo: true },
-  prompter: ''
+  prompter: '',
+  ai: { captions: false, moderation: true }
 }
 
 // Página del estudio: carga la transmisión, pide el token y conecta con LiveKit.
@@ -187,21 +190,91 @@ function StudioRoom({ broadcast, setBroadcast, dests, studioOutput, error, setEr
   const setPrompter = (text) => setLook((l) => ({ ...l, prompter: text.slice(0, 5000) }))
   const bannerText = banners.find((b) => b.id === activeBanner)?.text
 
-  // --- Comentarios de YouTube y Facebook ---
-  const comments = useComments(id)
+  const ai = { ...DEFAULT_LOOK.ai, ...look.ai }
+  const setAi = (patch) => setLook((l) => ({ ...l, ai: { ...ai, ...patch } }))
+  const running = ['live', 'recording'].includes(broadcast.status)
+
+  // --- Comentarios de YouTube y Facebook (con moderación de Kestrel IA) ---
+  const comments = useComments(id, ai.moderation)
   const [activeComment, setActiveComment] = useState(null)
-  const toggleComment = (c) => setActiveComment((a) => (a?.id === c.id ? null : c))
+  const [highlightNote, setHighlightNote] = useState('')
+  const toggleComment = (c) => {
+    setHighlightNote('')
+    setActiveComment((a) => (a?.id === c.id ? null : c))
+  }
   const commentOnAir = activeComment
     ? { author: activeComment.author, text: activeComment.text, platform: activeComment.platform }
     : null
+  const highlightQuestion = async () => {
+    const recent = comments.items.slice(-100).map(({ id: cid, author, text }) => ({ id: cid, author, text }))
+    const d = await api(`/broadcasts/${id}/comments/highlight`, { method: 'POST', body: { comments: recent } })
+    const chosen = comments.items.find((c) => c.id === d.id)
+    if (chosen) {
+      setActiveComment(chosen)
+      setHighlightNote(d.reason)
+    }
+  }
+
+  // --- Subtítulos en vivo: tu voz (en este navegador) y la de tus invitados (en el suyo) ---
+  const [caption, setCaption] = useState(null)
+  const captionTimer = useRef(null)
+  const showCaption = (speaker, text) => {
+    setCaption({ speaker, text })
+    clearTimeout(captionTimer.current)
+    captionTimer.current = setTimeout(() => setCaption(null), 4000)
+  }
+  const segmentQueue = useRef([])
+  const pushSegment = (speaker, text) => {
+    if (!running) return // la transcripción solo cuenta mientras se transmite o graba
+    const seg = makeSegment(broadcast.started_at, speaker, text)
+    if (seg) segmentQueue.current = [...segmentQueue.current, seg].slice(-2000)
+  }
+  const flushTranscript = useCallback(async () => {
+    while (segmentQueue.current.length > 0) {
+      const [batch, rest] = takeBatch(segmentQueue.current)
+      segmentQueue.current = rest
+      try {
+        await api(`/broadcasts/${id}/transcript`, { method: 'POST', body: { segments: batch } })
+      } catch {
+        segmentQueue.current = [...batch, ...segmentQueue.current].slice(-2000) // se reintenta luego
+        return
+      }
+    }
+  }, [id])
+  useEffect(() => {
+    if (!running) return undefined
+    const t = setInterval(flushTranscript, 5000)
+    return () => clearInterval(t)
+  }, [running, flushTranscript])
+  const myName = localParticipant?.name || 'Anfitrión'
+  useSpeechCaptions({
+    enabled: ai.captions && isMicrophoneEnabled,
+    onInterim: (t) => showCaption(myName, t),
+    onFinal: (t) => {
+      showCaption(myName, t)
+      pushSegment(myName, t)
+    },
+    onError: setError
+  })
+  useDataChannel(CAPTION_TOPIC, (msg) => {
+    if (!ai.captions) return
+    const c = parseCaption(msg.payload, msg.from?.identity)
+    if (!c) return
+    const name = msg.from?.name || 'Invitado'
+    showCaption(name, c.text)
+    if (c.final) pushSegment(name, c.text)
+  })
+  const captionOnAir = ai.captions ? caption : null
 
   // --- Invitados y salida al aire ven el mismo lienzo: se manda por el canal de datos ---
   // Egress entra como participante oculto (no aparece en la lista), por eso se publica
   // siempre, y más seguido mientras se transmite para que arranque rápido.
   const { send: sendStage } = useDataChannel(STAGE_TOPIC)
   const remoteCount = useRemoteParticipants().length
-  const stageKey = JSON.stringify({ layout, ids: stageIds, style, banner: bannerText || null, comment: commentOnAir })
-  const running = ['live', 'recording'].includes(broadcast.status)
+  const stageKey = JSON.stringify({
+    layout, ids: stageIds, style, banner: bannerText || null, comment: commentOnAir,
+    caption: captionOnAir, captions: ai.captions
+  })
   useEffect(() => {
     const publish = () => {
       Promise.resolve(sendStage(encodeStage(JSON.parse(stageKey)), { reliable: true })).catch(() => {})
@@ -245,6 +318,7 @@ function StudioRoom({ broadcast, setBroadcast, dests, studioOutput, error, setEr
     if (!window.confirm(isRecording ? '¿Terminar la grabación?' : '¿Terminar la transmisión?')) return
     setBusy(true)
     try {
+      await flushTranscript() // lo último que se dijo, antes de cerrar
       const d = await api(`/broadcasts/${id}/stop`, { method: 'POST' })
       setBroadcast(d.item)
     } catch (e) {
@@ -319,7 +393,7 @@ function StudioRoom({ broadcast, setBroadcast, dests, studioOutput, error, setEr
             <div className="prompter" aria-label="Teleprompter (solo tú lo ves)">{look.prompter}</div>
           )}
 
-          <Stage layout={layout} onStage={onStage} style={style} banner={bannerText} comment={commentOnAir} />
+          <Stage layout={layout} onStage={onStage} style={style} banner={bannerText} comment={commentOnAir} caption={captionOnAir} />
 
           <div className="layout-bar" role="group" aria-label="Diseño">
             <span className="section-label">DISEÑO</span>
@@ -401,6 +475,11 @@ function StudioRoom({ broadcast, setBroadcast, dests, studioOutput, error, setEr
           comments={comments}
           activeComment={activeComment}
           onToggleComment={toggleComment}
+          filteredCount={ai.moderation ? comments.filtered : 0}
+          onHighlight={highlightQuestion}
+          highlightNote={highlightNote}
+          ai={ai}
+          onAi={setAi}
         />
       </div>
     </>

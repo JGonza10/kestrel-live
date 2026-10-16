@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { encodeStage, guestLink, isGuest, isHost, parseStage } from './stageSync.js'
+import { encodeCaption, encodeStage, guestLink, isGuest, isHost, parseCaption, parseStage } from './stageSync.js'
 
 const state = {
   layout: 'duo',
   ids: ['host-1:camera', 'guest-0123456789ab:camera'],
   style: { theme: 'classic', color: '#1f3a4d', showNames: true, showLogo: false },
   banner: 'Bienvenidos',
-  comment: { author: 'Ana', text: '¡Saludos!', platform: 'youtube' }
+  comment: { author: 'Ana', text: '¡Saludos!', platform: 'youtube' },
+  caption: { speaker: 'Gonza', text: 'Hola a todos' },
+  captions: true
 }
 const raw = (obj) => new TextEncoder().encode(JSON.stringify(obj))
 
@@ -53,6 +55,23 @@ describe('comentario en escena', () => {
     expect(long.author).toHaveLength(80)
     expect(long.text).toHaveLength(300)
     expect(parseStage(raw(base), 'host-1').comment).toBeNull()
+  })
+})
+
+describe('subtítulos', () => {
+  it('el subtítulo en escena se queda con lo último dicho', () => {
+    const msg = { v: 1, layout: 'duo', ids: [], caption: { speaker: 'A', text: 'x'.repeat(150) + 'y'.repeat(100) } }
+    const c = parseStage(raw(msg), 'host-1').caption
+    expect(c.text).toHaveLength(200)
+    expect(c.text.endsWith('y')).toBe(true)
+    expect(parseStage(raw({ ...msg, caption: { text: '   ' } }), 'host-1').caption).toBeNull()
+    expect(parseStage(raw({ ...msg, captions: 'sí' }), 'host-1').captions).toBe(false)
+  })
+
+  it('el anfitrión solo acepta subtítulos de invitados', () => {
+    expect(parseCaption(encodeCaption('hola', true), 'guest-0123456789ab')).toEqual({ text: 'hola', final: true })
+    expect(parseCaption(encodeCaption('hola', true), 'host-1')).toBeNull()
+    expect(parseCaption(new TextEncoder().encode('{roto'), 'guest-0123456789ab')).toBeNull()
   })
 })
 

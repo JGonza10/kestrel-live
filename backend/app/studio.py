@@ -20,6 +20,7 @@ DEFAULT_LOOK = {
     "banners": [],
     "style": {"theme": "bubble", "color": "#a85a22", "showNames": True, "showLogo": True},
     "prompter": "",
+    "ai": {"captions": False, "moderation": True},
 }
 
 
@@ -65,9 +66,14 @@ def clean_look(data):
     if not isinstance(prompter, str) or len(prompter) > PROMPTER_MAX:
         errors["prompter"] = f"El guion admite hasta {PROMPTER_MAX} caracteres."
 
+    ai = data.get("ai", {})
+    if not isinstance(ai, dict):
+        ai = {}
+    clean_ai = {"captions": ai.get("captions") is True, "moderation": ai.get("moderation", True) is not False}
+
     if errors:
         return None, errors
-    return {"banners": clean_banners, "style": clean_style, "prompter": prompter}, {}
+    return {"banners": clean_banners, "style": clean_style, "prompter": prompter, "ai": clean_ai}, {}
 
 
 @bp.get("/look")

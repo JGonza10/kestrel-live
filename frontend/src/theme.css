@@ -100,3 +100,25 @@ section { margin-bottom: 28px; }
 .player { width: 100%; aspect-ratio: 16 / 9; background: #13222e; border-radius: 12px; }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; }
 code { font-size: 0.9em; background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+
+/* Kestrel IA en el resumen de la transmisión */
+.ai-report { max-width: 960px; margin-top: 28px; }
+.ai-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.ai-head h2 { margin: 0; }
+.ai-summary { margin: 0; font-size: 16px; line-height: 1.55; white-space: pre-wrap; }
+.pre { white-space: pre-wrap; margin: 8px 0 0; }
+details summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 600; }
+.chapters { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.chapter {
+  display: flex; gap: 12px; align-items: center; width: 100%; min-height: 44px; padding: 0 10px; text-align: left;
+  border: none; border-radius: 8px; background: transparent; color: var(--text); font: inherit; cursor: pointer;
+}
+.chapter:hover:not(:disabled) { background: var(--surface-2); }
+.chapter-time { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--accent-strong); min-width: 56px; }
+.clip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+.clip-card { display: flex; flex-direction: column; gap: 6px; padding: 8px; border: 2px solid var(--border); border-radius: 10px; min-width: 0; }
+.clip-thumb, .clip-video {
+  width: 100%; aspect-ratio: 9 / 16; max-height: 320px; border-radius: 8px; background: var(--navy); color: #fff;
+  border: none; font: inherit; font-size: 18px; cursor: pointer; object-fit: cover;
+}
+.btn.small-btn { min-height: 44px; font-size: 13px; padding: 0 12px; }

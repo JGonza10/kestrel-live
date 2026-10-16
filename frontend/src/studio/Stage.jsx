@@ -20,7 +20,7 @@ function Tile({ source, style, small }) {
   )
 }
 
-export default function Stage({ layout, onStage, style, banner, comment, emptyText = 'Agrega a alguien a la escena desde Tras bastidores' }) {
+export default function Stage({ layout, onStage, style, banner, comment, caption, emptyText = 'Agrega a alguien a la escena desde Tras bastidores' }) {
   const comp = composeStage(layout, onStage)
   const brand = { '--brand': style.color }
 
@@ -59,6 +59,13 @@ export default function Stage({ layout, onStage, style, banner, comment, emptyTe
             <strong>{comment.author}</strong>
             <p>{comment.text}</p>
           </div>
+        </div>
+      )}
+
+      {caption && (
+        <div className={`canvas-caption${banner ? ' above-banner' : ''}`} aria-live="polite">
+          {caption.speaker && <strong>{caption.speaker}: </strong>}
+          {caption.text}
         </div>
       )}
 
