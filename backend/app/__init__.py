@@ -21,7 +21,7 @@ def create_app(config_object=Config):
     _setup_logging(app)
     db.init_app(app)
 
-    from . import auth, broadcasts, comments, destinations, guests, studio
+    from . import auth, broadcasts, comments, destinations, guests, recordings, studio
     from .security import csrf_guard
 
     app.before_request(csrf_guard)
@@ -31,6 +31,7 @@ def create_app(config_object=Config):
     app.register_blueprint(guests.bp)
     app.register_blueprint(studio.bp)
     app.register_blueprint(comments.bp)
+    app.register_blueprint(recordings.bp)
 
     @app.get("/api/health")
     def health():

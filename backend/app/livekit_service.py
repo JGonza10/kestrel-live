@@ -39,12 +39,13 @@ def _composite_request(room_name: str, layout: str, **outputs) -> "api.RoomCompo
     return api.RoomCompositeEgressRequest(room_name=room_name, layout=layout, **outputs)
 
 
-async def _start_rtmp(room_name: str, urls: list[str], layout: str) -> str:
+async def _start_rtmp(room_name: str, urls: list[str], layout: str, filepath: str | None) -> str:
     key, secret = _creds()
     async with api.LiveKitAPI(current_app.config["LIVEKIT_URL"], key, secret) as lk:
-        req = _composite_request(
-            room_name, layout, stream_outputs=[api.StreamOutput(protocol=api.StreamProtocol.RTMP, urls=urls)]
-        )
+        outputs = {"stream_outputs": [api.StreamOutput(protocol=api.StreamProtocol.RTMP, urls=urls)]}
+        if filepath:  # además de transmitir, se guarda el MP4 para la biblioteca
+            outputs["file_outputs"] = [api.EncodedFileOutput(file_type=api.EncodedFileType.MP4, filepath=filepath)]
+        req = _composite_request(room_name, layout, **outputs)
         info = await lk.egress.start_room_composite_egress(req)
         return info.egress_id
 
@@ -72,8 +73,8 @@ async def _remove(room_name: str, identity: str) -> None:
         await lk.room.remove_participant(api.RoomParticipantIdentity(room=room_name, identity=identity))
 
 
-def start_stream(room_name: str, urls: list[str], layout: str = "speaker") -> str:
-    return asyncio.run(_start_rtmp(room_name, urls, layout))
+def start_stream(room_name: str, urls: list[str], layout: str = "speaker", filepath: str | None = None) -> str:
+    return asyncio.run(_start_rtmp(room_name, urls, layout, filepath))
 
 
 def start_recording(room_name: str, filepath: str, layout: str = "speaker") -> str:

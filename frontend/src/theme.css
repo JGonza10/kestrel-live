@@ -92,3 +92,11 @@ section { margin-bottom: 28px; }
   .sidenav-foot { margin-top: 0; border-top: none; padding-top: 0; }
   .content { padding: 20px 16px; }
 }
+
+/* Biblioteca y resumen de una transmisión */
+.section-label { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; color: var(--text-muted); }
+.back-link { display: inline-flex; align-items: center; min-height: 44px; text-decoration: none; font-weight: 600; }
+.rec-video { display: flex; flex-direction: column; gap: 12px; max-width: 960px; }
+.player { width: 100%; aspect-ratio: 16 / 9; background: #13222e; border-radius: 12px; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+code { font-size: 0.9em; background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }

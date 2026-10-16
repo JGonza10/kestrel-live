@@ -10,6 +10,7 @@ export default function Layout({ user, onLogout }) {
           <span className="display">Kestrel Live</span>
         </div>
         <NavLink to="/" end>Inicio</NavLink>
+        <NavLink to="/biblioteca">Biblioteca</NavLink>
         <NavLink to="/destinos">Destinos</NavLink>
         <div className="sidenav-foot">
           <span>{user.display_name}</span>

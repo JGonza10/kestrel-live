@@ -75,6 +75,7 @@ En el estudio, **Tras bastidores → Copiar link de invitado**. Quien abra el li
 | `LIVEKIT_URL` / `LIVEKIT_WS_URL` | Dónde está LiveKit (API y WebSocket). |
 | `SESSION_COOKIE_SECURE`, `SESSION_HOURS`, `LOGIN_MAX_ATTEMPTS`, `LOGIN_LOCK_MINUTES` | Ajustes de sesión y bloqueo de login. |
 | `YOUTUBE_API_KEY` / `FACEBOOK_PAGE_TOKEN` | Opcionales: leer los comentarios en vivo para ponerlos en escena. |
+| `RECORDINGS_DIR`, `RECORD_LIVE` | Carpeta de los MP4 (por defecto `recordings/`) y si las transmisiones en vivo también se graban (por defecto sí). |
 | `EGRESS_TEMPLATE_URL` | Página que Egress abre para que lo que sale al aire sea igual al lienzo. Vacía = plantilla de LiveKit. |
 
 ## Seguridad incluida
@@ -108,4 +109,4 @@ Por ahora es **solo local**. El video necesita puertos UDP (50000-50100) que Rai
 - [x] Escenas, banners, logo y temas de nombres (como en el prototipo), guardados en el servidor y idénticos al aire
 - [x] Comentarios del chat de YouTube y Facebook en pantalla
 - [ ] IA: subtítulos en vivo, moderación del chat, resumen, capítulos y clips verticales
-- [ ] Biblioteca de grabaciones
+- [x] Biblioteca de grabaciones

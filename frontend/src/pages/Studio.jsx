@@ -283,7 +283,7 @@ function StudioRoom({ broadcast, setBroadcast, dests, studioOutput, error, setEr
         {running ? (
           <button className="btn danger" onClick={stop} disabled={busy}>Terminar</button>
         ) : ended ? (
-          <Link className="btn ghost-light" to="/">Finalizada · Ir al inicio</Link>
+          <Link className="btn ghost-light" to={`/biblioteca/${id}`}>Finalizada · Ver resumen</Link>
         ) : (
           <button className="btn primary" onClick={start} disabled={busy || (!isRecording && selected.length === 0)}>
             {isRecording ? 'Grabar' : 'Salir en vivo'}

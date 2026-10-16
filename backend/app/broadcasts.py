@@ -85,7 +85,8 @@ def start(user, broadcast_id):
             if not dests:
                 return jsonify(error="Elige al menos un destino activo."), 400
             urls = [f"{d.rtmp_url.rstrip('/')}/{decrypt(d.stream_key_encrypted)}" for d in dests]
-            b.egress_id = livekit_service.start_stream(b.room_name, urls, layout)
+            filepath = f"/out/{b.room_name}-{{time}}.mp4" if current_app.config.get("RECORD_LIVE") else None
+            b.egress_id = livekit_service.start_stream(b.room_name, urls, layout, filepath)
             b.status = "live"
     except Exception:  # noqa: BLE001 - el detalle va al log, no al usuario
         current_app.logger.exception("No se pudo iniciar la transmisión %s", b.id)

@@ -7,6 +7,8 @@ import Destinations from './pages/Destinations.jsx'
 import Studio from './pages/Studio.jsx'
 import Guest from './pages/Guest.jsx'
 import Output from './pages/Output.jsx'
+import Library from './pages/Library.jsx'
+import Recording from './pages/Recording.jsx'
 import Layout from './components/Layout.jsx'
 
 export default function App() {
@@ -47,6 +49,8 @@ function HostApp() {
       <Route element={<Layout user={user} onLogout={logout} />}>
         <Route path="/" element={<Home />} />
         <Route path="/destinos" element={<Destinations />} />
+        <Route path="/biblioteca" element={<Library />} />
+        <Route path="/biblioteca/:id" element={<Recording />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
