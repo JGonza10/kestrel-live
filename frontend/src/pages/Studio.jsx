@@ -3,17 +3,20 @@ import { Link, useParams } from 'react-router-dom'
 import {
   LiveKitRoom,
   RoomAudioRenderer,
+  useDataChannel,
   useLocalParticipant,
-  useMediaDeviceSelect,
+  useRemoteParticipants,
   useTracks
 } from '@livekit/components-react'
 import { Track } from 'livekit-client'
 import { api } from '../api.js'
 import Logo from '../components/Logo.jsx'
 import Stage from '../studio/Stage.jsx'
+import DeviceSettings from '../studio/DeviceSettings.jsx'
 import SidePanel, { SWATCHES, abbr } from '../studio/SidePanel.jsx'
 import { LAYOUTS, SCENES, destSummary, egressLayout, formatClock, initials } from '../studio/layouts.js'
 import { useSticky } from '../studio/useSticky.js'
+import { STAGE_TOPIC, encodeStage, guestLink, isGuest } from '../studio/stageSync.js'
 import '../studio/studio.css'
 
 const DEFAULT_LOOK = {
@@ -110,6 +113,7 @@ function StudioRoom({ broadcast, setBroadcast, dests, error, setError }) {
         id: `${ref.participant.identity}:${ref.source}`,
         isScreen: ref.source === Track.Source.ScreenShare,
         isLocal: ref.participant.isLocal,
+        identity: ref.participant.identity,
         name: ref.participant.name || ref.participant.identity,
         trackRef: ref
       })),
@@ -199,6 +203,30 @@ function StudioRoom({ broadcast, setBroadcast, dests, error, setError }) {
   const setStyle = (patch) => setLook((l) => ({ ...l, style: { ...style, ...patch } }))
   const setPrompter = (text) => setLook((l) => ({ ...l, prompter: text.slice(0, 5000) }))
   const bannerText = banners.find((b) => b.id === activeBanner)?.text
+
+  // --- Los invitados ven el mismo lienzo: se lo mandamos por el canal de datos ---
+  const { send: sendStage } = useDataChannel(STAGE_TOPIC)
+  const remoteCount = useRemoteParticipants().length
+  const stageKey = JSON.stringify({ layout, ids: stageIds, style, banner: bannerText || null })
+  useEffect(() => {
+    if (remoteCount === 0) return undefined
+    const publish = () => {
+      Promise.resolve(sendStage(encodeStage(JSON.parse(stageKey)), { reliable: true })).catch(() => {})
+    }
+    publish()
+    // Se repite cada 5 s por si alguien entró justo entre dos cambios.
+    const t = setInterval(publish, 5000)
+    return () => clearInterval(t)
+  }, [stageKey, remoteCount, sendStage])
+
+  const removeGuest = async (source) => {
+    if (!window.confirm(`¿Sacar a ${source.name} del estudio?`)) return
+    try {
+      await api(`/broadcasts/${id}/guests/remove`, { method: 'POST', body: { identity: source.identity } })
+    } catch (e) {
+      setError(e.message)
+    }
+  }
 
   // --- Salir en vivo / grabar / terminar ---
   const running = ['live', 'recording'].includes(broadcast.status)
@@ -322,7 +350,7 @@ function StudioRoom({ broadcast, setBroadcast, dests, error, setError }) {
           <section className="backstage" aria-label="Tras bastidores">
             <div className="backstage-head">
               <span className="section-label">TRAS BASTIDORES</span>
-              <button className="btn small-btn" disabled title="Pronto: link para que entren tus invitados">Copiar link de invitado · pronto</button>
+              <GuestInvite broadcastId={id} disabled={ended} onError={setError} />
             </div>
             <div className="backstage-list">
               {sources.map((s) => {
@@ -335,6 +363,9 @@ function StudioRoom({ broadcast, setBroadcast, dests, error, setError }) {
                     <button className={`btn small-btn${on ? '' : ' primary'}`} onClick={() => toggleOnStage(s.id)}>
                       {on ? 'Quitar de escena' : 'Agregar a escena'}
                     </button>
+                    {!s.isScreen && isGuest(s.identity) && (
+                      <button className="btn small-btn" onClick={() => removeGuest(s)}>Sacar del estudio</button>
+                    )}
                   </div>
                 )
               })}
@@ -382,33 +413,81 @@ function StudioRoom({ broadcast, setBroadcast, dests, error, setError }) {
   )
 }
 
-function DeviceSelect({ kind, label, onError }) {
-  const { devices, activeDeviceId, setActiveMediaDevice } = useMediaDeviceSelect({
-    kind,
-    requestPermissions: true,
-    onError: () => onError('No se pudo leer la lista de dispositivos.')
-  })
-  const fieldId = `dev-${kind}`
-  return (
-    <div className="stack">
-      <label htmlFor={fieldId}>{label}</label>
-      <select
-        id={fieldId}
-        value={activeDeviceId}
-        onChange={(e) => setActiveMediaDevice(e.target.value).catch(() => onError('No se pudo cambiar el dispositivo.'))}
-      >
-        {devices.map((d) => <option key={d.deviceId} value={d.deviceId}>{d.label || 'Dispositivo sin nombre'}</option>)}
-      </select>
-    </div>
-  )
-}
+// Link de invitado: se crea al primer clic, se copia y se puede cambiar o desactivar.
+function GuestInvite({ broadcastId, disabled, onError }) {
+  const [code, setCode] = useState(null)
+  const [open, setOpen] = useState(false)
+  const [note, setNote] = useState('')
+  const [busy, setBusy] = useState(false)
+  const link = code ? guestLink(window.location.origin, code) : ''
 
-function DeviceSettings({ onError }) {
+  useEffect(() => {
+    api(`/broadcasts/${broadcastId}/invite`).then((d) => setCode(d.code)).catch(() => {})
+  }, [broadcastId])
+
+  const copy = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setNote('Link copiado. Mándaselo a tu invitado.')
+    } catch {
+      // Sin permiso de portapapeles (p. ej. http fuera de localhost): se copia a mano.
+      setNote('Selecciona el link y cópialo.')
+    }
+  }
+
+  const run = async (fn) => {
+    setBusy(true)
+    try {
+      await fn()
+    } catch (e) {
+      onError(e.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const getLink = () => run(async () => {
+    let c = code
+    if (!c) {
+      c = (await api(`/broadcasts/${broadcastId}/invite`, { method: 'POST' })).code
+      setCode(c)
+    }
+    setOpen(true)
+    await copy(guestLink(window.location.origin, c))
+  })
+
+  const rotate = () => run(async () => {
+    if (!window.confirm('El link anterior dejará de servir. ¿Crear uno nuevo?')) return
+    const c = (await api(`/broadcasts/${broadcastId}/invite`, { method: 'POST' })).code
+    setCode(c)
+    await copy(guestLink(window.location.origin, c))
+  })
+
+  const revoke = () => run(async () => {
+    if (!window.confirm('Nadie más podrá entrar con el link. Los que ya están adentro se quedan. ¿Desactivar?')) return
+    await api(`/broadcasts/${broadcastId}/invite`, { method: 'DELETE' })
+    setCode(null)
+    setOpen(false)
+    setNote('')
+  })
+
   return (
-    <section className="settings card" aria-label="Ajustes de dispositivos">
-      <DeviceSelect kind="videoinput" label="Cámara" onError={onError} />
-      <DeviceSelect kind="audioinput" label="Micrófono" onError={onError} />
-      <DeviceSelect kind="audiooutput" label="Bocinas" onError={onError} />
-    </section>
+    <div className="invite">
+      <button className="btn small-btn primary" onClick={getLink} disabled={disabled || busy}>
+        Copiar link de invitado
+      </button>
+      {open && code && (
+        <div className="invite-box card">
+          <label htmlFor="guest-link" className="small">Link de invitado</label>
+          <input id="guest-link" readOnly value={link} onFocus={(e) => e.target.select()} />
+          {note && <p className="muted small" role="status">{note}</p>}
+          <div className="invite-actions">
+            <button className="btn small-btn" onClick={rotate} disabled={busy}>Crear link nuevo</button>
+            <button className="btn small-btn" onClick={revoke} disabled={busy}>Desactivar</button>
+            <button className="btn small-btn" onClick={() => setOpen(false)}>Cerrar</button>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }

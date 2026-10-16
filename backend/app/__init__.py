@@ -21,13 +21,14 @@ def create_app(config_object=Config):
     _setup_logging(app)
     db.init_app(app)
 
-    from . import auth, broadcasts, destinations
+    from . import auth, broadcasts, destinations, guests
     from .security import csrf_guard
 
     app.before_request(csrf_guard)
     app.register_blueprint(auth.bp)
     app.register_blueprint(destinations.bp)
     app.register_blueprint(broadcasts.bp)
+    app.register_blueprint(guests.bp)
 
     @app.get("/api/health")
     def health():

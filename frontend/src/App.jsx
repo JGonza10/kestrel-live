@@ -1,13 +1,27 @@
 import { useEffect, useState } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { api } from './api.js'
 import Login from './pages/Login.jsx'
 import Home from './pages/Home.jsx'
 import Destinations from './pages/Destinations.jsx'
 import Studio from './pages/Studio.jsx'
+import Guest from './pages/Guest.jsx'
 import Layout from './components/Layout.jsx'
 
 export default function App() {
+  // Los invitados entran con su link, sin cuenta ni login.
+  const { pathname } = useLocation()
+  if (pathname.startsWith('/invitado/')) {
+    return (
+      <Routes>
+        <Route path="/invitado/:code" element={<Guest />} />
+      </Routes>
+    )
+  }
+  return <HostApp />
+}
+
+function HostApp() {
   const [user, setUser] = useState(undefined) // undefined = cargando
 
   useEffect(() => {

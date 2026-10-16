@@ -81,3 +81,21 @@ class Broadcast(db.Model):
             "started_at": self.started_at.isoformat() if self.started_at else None,
             "ended_at": self.ended_at.isoformat() if self.ended_at else None,
         }
+
+
+class GuestInvite(db.Model):
+    """Link para que un invitado entre al estudio sin cuenta.
+
+    El código se guarda dos veces: su hash SHA-256 (para buscarlo sin
+    tener el código en claro) y cifrado con Fernet (para que el anfitrión
+    pueda volver a copiar el link). Solo hay un link activo por transmisión.
+    """
+
+    __tablename__ = "guest_invites"
+
+    id = db.Column(db.Integer, primary_key=True)
+    broadcast_id = db.Column(db.Integer, db.ForeignKey("broadcasts.id"), nullable=False, index=True)
+    code_hash = db.Column(db.String(64), unique=True, nullable=False, index=True)
+    code_encrypted = db.Column(db.LargeBinary, nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow)
+    revoked_at = db.Column(db.DateTime(timezone=True), nullable=True)

@@ -20,14 +20,14 @@ function Tile({ source, style, small }) {
   )
 }
 
-export default function Stage({ layout, onStage, style, banner }) {
+export default function Stage({ layout, onStage, style, banner, emptyText = 'Agrega a alguien a la escena desde Tras bastidores' }) {
   const comp = composeStage(layout, onStage)
   const brand = { '--brand': style.color }
 
   return (
     <div className="canvas" style={brand} aria-label="Lienzo de la transmisión">
       {comp.mode === 'empty' && (
-        <div className="canvas-empty">Agrega a alguien a la escena desde Tras bastidores</div>
+        <div className="canvas-empty">{emptyText}</div>
       )}
 
       {comp.mode === 'grid' && (

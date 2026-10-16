@@ -6,6 +6,7 @@ from flask import Blueprint, current_app, jsonify, request
 
 from . import livekit_service
 from .extensions import db
+from .guests import revoke_links
 from .models import Broadcast, Destination
 from .security import decrypt, login_required
 
@@ -104,6 +105,7 @@ def stop(user, broadcast_id):
         except Exception:  # noqa: BLE001
             current_app.logger.exception("No se pudo detener egress %s", b.egress_id)
     b.status = "ended"
+    revoke_links(b.id)  # al terminar, el link de invitado deja de servir
     b.ended_at = datetime.now(timezone.utc)
     db.session.commit()
     return jsonify(item=b.to_dict())

@@ -1,5 +1,6 @@
 """Conexión con LiveKit: tokens para entrar al estudio y Egress para transmitir/grabar."""
 import asyncio
+from datetime import timedelta
 
 from flask import current_app
 from livekit import api
@@ -13,7 +14,8 @@ def _creds():
     return key, secret
 
 
-def make_join_token(room_name: str, identity: str, display_name: str, can_publish: bool = True) -> str:
+def make_join_token(room_name: str, identity: str, display_name: str, can_publish: bool = True,
+                    ttl: timedelta | None = None) -> str:
     key, secret = _creds()
     grants = api.VideoGrants(
         room_join=True,
@@ -22,13 +24,10 @@ def make_join_token(room_name: str, identity: str, display_name: str, can_publis
         can_subscribe=True,
         can_publish_data=True,
     )
-    return (
-        api.AccessToken(key, secret)
-        .with_identity(identity)
-        .with_name(display_name)
-        .with_grants(grants)
-        .to_jwt()
-    )
+    token = api.AccessToken(key, secret).with_identity(identity).with_name(display_name).with_grants(grants)
+    if ttl is not None:
+        token = token.with_ttl(ttl)
+    return token.to_jwt()
 
 
 async def _start_rtmp(room_name: str, urls: list[str], layout: str) -> str:
@@ -61,6 +60,12 @@ async def _stop(egress_id: str) -> None:
         await lk.egress.stop_egress(api.StopEgressRequest(egress_id=egress_id))
 
 
+async def _remove(room_name: str, identity: str) -> None:
+    key, secret = _creds()
+    async with api.LiveKitAPI(current_app.config["LIVEKIT_URL"], key, secret) as lk:
+        await lk.room.remove_participant(api.RoomParticipantIdentity(room=room_name, identity=identity))
+
+
 def start_stream(room_name: str, urls: list[str], layout: str = "speaker") -> str:
     return asyncio.run(_start_rtmp(room_name, urls, layout))
 
@@ -71,3 +76,7 @@ def start_recording(room_name: str, filepath: str, layout: str = "speaker") -> s
 
 def stop(egress_id: str) -> None:
     asyncio.run(_stop(egress_id))
+
+
+def remove_participant(room_name: str, identity: str) -> None:
+    asyncio.run(_remove(room_name, identity))

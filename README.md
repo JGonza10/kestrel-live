@@ -40,6 +40,15 @@ npm run dev                                         # http://localhost:5173
 
 Entra a http://localhost:5173 con tu usuario. Agrega tus destinos con la clave de transmisión que te da cada red, crea una transmisión y entra al estudio.
 
+### Invitados
+
+En el estudio, **Tras bastidores → Copiar link de invitado**. Quien abra el link escribe su nombre y entra tras bastidores; tú decides cuándo sale en escena. El invitado ve el mismo lienzo que el público, tiene mic, cámara, presentar pantalla y el chat privado.
+
+- **Crear link nuevo** anula el anterior; **Desactivar** impide que entre alguien más.
+- **Sacar del estudio** expulsa a un invitado que ya entró.
+- Al terminar la transmisión, el link deja de servir.
+- Para invitar a alguien fuera de tu red, la laptop debe ser alcanzable desde internet (ver *Publicación*).
+
 ## Variables de entorno
 
 | Variable | Para qué sirve |
@@ -58,6 +67,7 @@ Entra a http://localhost:5173 con tu usuario. Agrega tus destinos con la clave d
 - Cookies de sesión `HttpOnly`, `Secure` y `SameSite=Lax`, con expiración.
 - Protección CSRF: las peticiones que cambian datos exigen el encabezado `X-Requested-With`.
 - Claves de transmisión **cifradas** (Fernet). Nunca se regresan al navegador.
+- Links de invitado de 192 bits: en la base se guardan su hash SHA-256 (para buscarlos) y una copia cifrada. El invitado recibe un token de LiveKit que solo sirve 15 minutos para conectarse y una identidad `guest-…` que no puede mover el lienzo ni usar la API del anfitrión.
 - SQLAlchemy: todas las consultas son parametrizadas. Además, se validan todas las entradas.
 - Los errores técnicos van a `logs/kestrel-live.log` y el usuario solo ve un mensaje genérico.
 - Ningún secreto vive en el código; `.env` está en `.gitignore`.
@@ -78,7 +88,7 @@ Por ahora es **solo local**. El video necesita puertos UDP (50000-50100) que Rai
 
 - [x] Login, destinos RTMP cifrados, transmisiones y grabaciones (API + pruebas)
 - [x] Estudio con LiveKit y botón Salir en vivo / Grabar
-- [ ] Invitados por link (token de solo-invitado)
+- [x] Invitados por link (token de solo-invitado)
 - [ ] Escenas, banners, logo y temas de nombres (como en el prototipo)
 - [ ] Comentarios del chat de YouTube y Facebook en pantalla
 - [ ] IA: subtítulos en vivo, moderación del chat, resumen, capítulos y clips verticales

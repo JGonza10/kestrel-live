@@ -132,7 +132,7 @@ function StyleTab({ style, onStyle }) {
   )
 }
 
-function PrivateChat() {
+export function PrivateChat() {
   const { send, chatMessages, isSending } = useChat()
   const [text, setText] = useState('')
   const endRef = useRef(null)
