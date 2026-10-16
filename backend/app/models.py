@@ -126,3 +126,28 @@ class CommentSource(db.Model):
 
     def to_dict(self):
         return {"youtube": self.youtube_video_id or "", "facebook": self.facebook_video_id or ""}
+
+
+class TranscriptSegment(db.Model):
+    """Una frase de los subtítulos en vivo. t_ms = milisegundos desde que inició la transmisión."""
+
+    __tablename__ = "transcript_segments"
+
+    id = db.Column(db.Integer, primary_key=True)
+    broadcast_id = db.Column(db.Integer, db.ForeignKey("broadcasts.id"), nullable=False, index=True)
+    t_ms = db.Column(db.Integer, nullable=False)
+    speaker = db.Column(db.String(80), nullable=False)
+    text = db.Column(db.String(500), nullable=False)
+
+    def to_dict(self):
+        return {"t_ms": self.t_ms, "speaker": self.speaker, "text": self.text}
+
+
+class AiReport(db.Model):
+    """Lo que Kestrel IA generó al terminar: resumen, capítulos, clips y textos para redes (JSON validado)."""
+
+    __tablename__ = "ai_reports"
+
+    broadcast_id = db.Column(db.Integer, db.ForeignKey("broadcasts.id"), primary_key=True)
+    data = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow)

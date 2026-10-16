@@ -77,7 +77,7 @@ def test_sources_validation(logged, bid):
 
 
 def test_poll_without_sources_is_empty(logged, bid):
-    assert logged.get(f"/api/broadcasts/{bid}/comments").get_json() == {"items": [], "errors": {}, "poll_ms": 0}
+    assert logged.get(f"/api/broadcasts/{bid}/comments").get_json() == {"items": [], "errors": {}, "poll_ms": 0, "filtered": 0}
 
 
 def test_poll_reads_both_platforms_and_remembers_position(logged, bid, keys, monkeypatch):

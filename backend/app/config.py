@@ -47,6 +47,10 @@ class Config:
     YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
     FACEBOOK_PAGE_TOKEN = os.getenv("FACEBOOK_PAGE_TOKEN")
 
+    # Kestrel IA (Claude). Sin llave, las funciones de IA avisan que falta.
+    ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+    AI_MODEL = os.getenv("AI_MODEL", "claude-opus-5-5")
+
     # Página que Egress abre para componer la salida (vacío = plantilla de LiveKit).
     EGRESS_TEMPLATE_URL = os.getenv("EGRESS_TEMPLATE_URL", "http://host.docker.internal:5173/salida").strip()
 
@@ -59,3 +63,4 @@ class TestConfig(Config):
     FERNET_KEY = Fernet.generate_key().decode()  # llave nueva en cada corrida de pruebas
     LIVEKIT_API_KEY = "devkey"
     LIVEKIT_API_SECRET = "devsecret-devsecret-devsecret-123"
+    ANTHROPIC_API_KEY = None  # las pruebas nunca llaman a la API real

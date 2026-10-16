@@ -74,6 +74,38 @@ def parse_facebook_id(raw: str) -> str | None:
     return m.group(1) if m else None
 
 
+# --- Moderación (reglas locales: gratis, instantánea y sin mandar el chat a nadie) ---
+BLOCKED_WORDS = {
+    # insultos comunes (es/en); se comparan sin acentos y en minúsculas
+    "pendejo", "pendeja", "idiota", "imbecil", "estupido", "estupida", "puto", "puta", "cabron",
+    "culero", "culera", "verga", "mierda", "chinga", "chingada", "naco", "joto", "zorra", "baboso",
+    "fuck", "fucking", "shit", "bitch", "asshole", "idiot", "stupid", "retard", "whore",
+}
+SPAM_PATTERNS = [
+    re.compile(r"(https?://|www\.|\b[\w-]+\.(com|net|org|xyz|ly|io|me|link|click)\b)", re.I),  # links
+    re.compile(r"(.)\1{7,}"),                                       # aaaaaaaaa
+    re.compile(r"\b(gana|ganar|gratis|free|crypto|cripto|bitcoin|forex|inversi[oó]n)\b.*\b(dm|whats|telegram|link)\b", re.I),
+]
+
+
+def _plain(text: str) -> str:
+    table = str.maketrans("áéíóúüñ", "aeiouun")
+    return text.lower().translate(table)
+
+
+def moderate(text: str) -> str | None:
+    """Regresa el motivo si el comentario debe ocultarse ('insulto' o 'spam'), o None."""
+    words = set(re.findall(r"[a-zñ]+", _plain(text)))
+    if words & BLOCKED_WORDS:
+        return "insulto"
+    if any(p.search(text) for p in SPAM_PATTERNS):
+        return "spam"
+    letters = [c for c in text if c.isalpha()]
+    if len(letters) >= 15 and sum(c.isupper() for c in letters) / len(letters) > 0.8:
+        return "spam"  # todo en MAYÚSCULAS
+    return None
+
+
 def _clean(text, limit):
     return " ".join(str(text or "").split())[:limit]
 
@@ -194,7 +226,7 @@ def poll_comments(user, broadcast_id):
     _owned(user, broadcast_id)
     src = db.session.get(CommentSource, broadcast_id)
     if src is None or not (src.youtube_video_id or src.facebook_video_id):
-        return jsonify(items=[], errors={}, poll_ms=0)
+        return jsonify(items=[], errors={}, poll_ms=0, filtered=0)
 
     items, errors, waits = [], {}, [MIN_POLL_MS]
     for platform, enabled, fetch in (
@@ -213,4 +245,8 @@ def poll_comments(user, broadcast_id):
             current_app.logger.exception("No se pudieron leer comentarios de %s", platform)
             errors[platform] = f"No se pudieron leer los comentarios de {platform.capitalize()}. Reintentando…"
     db.session.commit()
-    return jsonify(items=items, errors=errors, poll_ms=max(waits))
+    filtered = 0
+    if request.args.get("moderate") == "1":
+        kept = [c for c in items if not moderate(c["text"])]
+        filtered, items = len(items) - len(kept), kept
+    return jsonify(items=items, errors=errors, poll_ms=max(waits), filtered=filtered)
