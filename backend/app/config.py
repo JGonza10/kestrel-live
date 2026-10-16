@@ -1,6 +1,7 @@
 """Configuración leída de variables de entorno (nunca secretos en el código)."""
 import os
 from datetime import timedelta
+from pathlib import Path
 
 from cryptography.fernet import Fernet
 
@@ -37,6 +38,21 @@ class Config:
     LIVEKIT_WS_URL = os.getenv("LIVEKIT_WS_URL", "ws://localhost:7880")
     LIVEKIT_API_KEY = os.getenv("LIVEKIT_API_KEY")
     LIVEKIT_API_SECRET = os.getenv("LIVEKIT_API_SECRET")
+    # Grabaciones: carpeta que docker-compose monta en Egress como /out
+    RECORDINGS_DIR = os.getenv("RECORDINGS_DIR", str(Path(__file__).resolve().parents[2] / "recordings"))
+    # Además de transmitir, guardar el MP4 de cada transmisión en vivo
+    RECORD_LIVE = _bool("RECORD_LIVE", True)
+
+    # Comentarios en vivo (opcionales)
+    YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
+    FACEBOOK_PAGE_TOKEN = os.getenv("FACEBOOK_PAGE_TOKEN")
+
+    # Kestrel IA (Claude). Sin llave, las funciones de IA avisan que falta.
+    ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+    AI_MODEL = os.getenv("AI_MODEL", "claude-opus-5-5")
+
+    # Página que Egress abre para componer la salida (vacío = plantilla de LiveKit).
+    EGRESS_TEMPLATE_URL = os.getenv("EGRESS_TEMPLATE_URL", "http://host.docker.internal:5173/salida").strip()
 
 
 class TestConfig(Config):
@@ -47,3 +63,4 @@ class TestConfig(Config):
     FERNET_KEY = Fernet.generate_key().decode()  # llave nueva en cada corrida de pruebas
     LIVEKIT_API_KEY = "devkey"
     LIVEKIT_API_SECRET = "devsecret-devsecret-devsecret-123"
+    ANTHROPIC_API_KEY = None  # las pruebas nunca llaman a la API real

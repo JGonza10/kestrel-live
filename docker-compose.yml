@@ -45,6 +45,9 @@ services:
         redis:
           address: redis:6379
         log_level: info
+    # Para abrir la página /salida que corre en la laptop (Vite, puerto 5173).
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./recordings:/out
     depends_on:

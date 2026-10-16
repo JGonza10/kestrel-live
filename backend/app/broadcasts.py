@@ -6,6 +6,7 @@ from flask import Blueprint, current_app, jsonify, request
 
 from . import livekit_service
 from .extensions import db
+from .guests import revoke_links
 from .models import Broadcast, Destination
 from .security import decrypt, login_required
 
@@ -56,7 +57,8 @@ def get_broadcast(user, broadcast_id):
 def join_token(user, broadcast_id):
     b = _get_owned(user, broadcast_id)
     token = livekit_service.make_join_token(b.room_name, f"host-{user.id}", user.display_name)
-    return jsonify(token=token, ws_url=current_app.config["LIVEKIT_WS_URL"])
+    return jsonify(token=token, ws_url=current_app.config["LIVEKIT_WS_URL"],
+                   studio_output=bool(current_app.config.get("EGRESS_TEMPLATE_URL")))
 
 
 @bp.post("/<int:broadcast_id>/start")
@@ -83,7 +85,8 @@ def start(user, broadcast_id):
             if not dests:
                 return jsonify(error="Elige al menos un destino activo."), 400
             urls = [f"{d.rtmp_url.rstrip('/')}/{decrypt(d.stream_key_encrypted)}" for d in dests]
-            b.egress_id = livekit_service.start_stream(b.room_name, urls, layout)
+            filepath = f"/out/{b.room_name}-{{time}}.mp4" if current_app.config.get("RECORD_LIVE") else None
+            b.egress_id = livekit_service.start_stream(b.room_name, urls, layout, filepath)
             b.status = "live"
     except Exception:  # noqa: BLE001 - el detalle va al log, no al usuario
         current_app.logger.exception("No se pudo iniciar la transmisión %s", b.id)
@@ -104,6 +107,7 @@ def stop(user, broadcast_id):
         except Exception:  # noqa: BLE001
             current_app.logger.exception("No se pudo detener egress %s", b.egress_id)
     b.status = "ended"
+    revoke_links(b.id)  # al terminar, el link de invitado deja de servir
     b.ended_at = datetime.now(timezone.utc)
     db.session.commit()
     return jsonify(item=b.to_dict())

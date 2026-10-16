@@ -55,7 +55,9 @@ export default function Home() {
                 <span className="pill">{b.kind === 'live' ? 'Transmisión' : 'Grabación'} · {b.status}</span>
               </div>
               <span className="muted">{new Date(b.created_at).toLocaleString('es-MX')}</span>
-              {b.status !== 'ended' && <Link className="btn primary" to={`/studio/${b.id}`}>Entrar al estudio</Link>}
+              {b.status !== 'ended'
+                ? <Link className="btn primary" to={`/studio/${b.id}`}>Entrar al estudio</Link>
+                : <Link className="btn" to={`/biblioteca/${b.id}`}>Ver resumen</Link>}
             </div>
           ))}
         </div>
