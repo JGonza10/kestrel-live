@@ -6,11 +6,14 @@ import Home from './pages/Home.jsx'
 import Destinations from './pages/Destinations.jsx'
 import Studio from './pages/Studio.jsx'
 import Guest from './pages/Guest.jsx'
+import Output from './pages/Output.jsx'
 import Layout from './components/Layout.jsx'
 
 export default function App() {
   // Los invitados entran con su link, sin cuenta ni login.
+  // /salida la abre LiveKit Egress con su propio token para componer la transmisión.
   const { pathname } = useLocation()
+  if (pathname === '/salida') return <Output />
   if (pathname.startsWith('/invitado/')) {
     return (
       <Routes>

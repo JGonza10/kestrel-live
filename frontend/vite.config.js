@@ -6,6 +6,8 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
+    // Egress (en Docker) abre http://host.docker.internal:5173/salida para componer la transmisión.
+    allowedHosts: ['host.docker.internal'],
     proxy: { '/api': 'http://127.0.0.1:5000' }
   }
 })

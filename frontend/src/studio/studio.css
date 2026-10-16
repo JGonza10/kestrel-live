@@ -242,3 +242,8 @@ textarea { font: inherit; font-size: 14px; padding: 10px; border: 1px solid var(
   .self-view { max-width: none; }
   .guest-chat { max-width: none; flex-basis: 100%; }
 }
+
+/* Salida para Egress (/salida): solo el lienzo, a pantalla completa, sin bordes */
+.output-root { width: 100vw; height: 100vh; overflow: hidden; background: #13222e; }
+.output-frame { transform-origin: top left; }
+.output-frame .canvas { border-radius: 0; }

@@ -30,13 +30,20 @@ def make_join_token(room_name: str, identity: str, display_name: str, can_publis
     return token.to_jwt()
 
 
+def _composite_request(room_name: str, layout: str, **outputs) -> "api.RoomCompositeEgressRequest":
+    """Si hay plantilla propia (EGRESS_TEMPLATE_URL), Egress abre nuestra página /salida
+    y transmite exactamente el lienzo del estudio. Si no, usa la plantilla de LiveKit."""
+    template = current_app.config.get("EGRESS_TEMPLATE_URL") or ""
+    if template:
+        return api.RoomCompositeEgressRequest(room_name=room_name, custom_base_url=template, **outputs)
+    return api.RoomCompositeEgressRequest(room_name=room_name, layout=layout, **outputs)
+
+
 async def _start_rtmp(room_name: str, urls: list[str], layout: str) -> str:
     key, secret = _creds()
     async with api.LiveKitAPI(current_app.config["LIVEKIT_URL"], key, secret) as lk:
-        req = api.RoomCompositeEgressRequest(
-            room_name=room_name,
-            layout=layout,
-            stream_outputs=[api.StreamOutput(protocol=api.StreamProtocol.RTMP, urls=urls)],
+        req = _composite_request(
+            room_name, layout, stream_outputs=[api.StreamOutput(protocol=api.StreamProtocol.RTMP, urls=urls)]
         )
         info = await lk.egress.start_room_composite_egress(req)
         return info.egress_id
@@ -45,9 +52,8 @@ async def _start_rtmp(room_name: str, urls: list[str], layout: str) -> str:
 async def _start_file(room_name: str, filepath: str, layout: str) -> str:
     key, secret = _creds()
     async with api.LiveKitAPI(current_app.config["LIVEKIT_URL"], key, secret) as lk:
-        req = api.RoomCompositeEgressRequest(
-            room_name=room_name,
-            layout=layout,
+        req = _composite_request(
+            room_name, layout,
             file_outputs=[api.EncodedFileOutput(file_type=api.EncodedFileType.MP4, filepath=filepath)],
         )
         info = await lk.egress.start_room_composite_egress(req)

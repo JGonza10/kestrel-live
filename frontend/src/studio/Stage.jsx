@@ -26,7 +26,7 @@ export default function Stage({ layout, onStage, style, banner, emptyText = 'Agr
 
   return (
     <div className="canvas" style={brand} aria-label="Lienzo de la transmisión">
-      {comp.mode === 'empty' && (
+      {comp.mode === 'empty' && emptyText && (
         <div className="canvas-empty">{emptyText}</div>
       )}
 

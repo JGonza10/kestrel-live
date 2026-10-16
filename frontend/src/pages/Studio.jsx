@@ -1,14 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
   LiveKitRoom,
   RoomAudioRenderer,
   useDataChannel,
   useLocalParticipant,
-  useRemoteParticipants,
-  useTracks
+  useRemoteParticipants
 } from '@livekit/components-react'
-import { Track } from 'livekit-client'
 import { api } from '../api.js'
 import Logo from '../components/Logo.jsx'
 import Stage from '../studio/Stage.jsx'
@@ -17,6 +15,7 @@ import SidePanel, { SWATCHES, abbr } from '../studio/SidePanel.jsx'
 import { LAYOUTS, SCENES, destSummary, egressLayout, formatClock, initials } from '../studio/layouts.js'
 import { useSticky } from '../studio/useSticky.js'
 import { STAGE_TOPIC, encodeStage, guestLink, isGuest } from '../studio/stageSync.js'
+import { useStageSources } from '../studio/useStageSources.js'
 import '../studio/studio.css'
 
 const DEFAULT_LOOK = {
@@ -66,6 +65,7 @@ export default function Studio() {
         broadcast={broadcast}
         setBroadcast={setBroadcast}
         dests={dests}
+        studioOutput={Boolean(conn.studio_output)}
         error={error}
         setError={setError}
       />
@@ -74,7 +74,7 @@ export default function Studio() {
   )
 }
 
-function StudioRoom({ broadcast, setBroadcast, dests, error, setError }) {
+function StudioRoom({ broadcast, setBroadcast, dests, studioOutput, error, setError }) {
   const id = broadcast.id
   const [look, setLook] = useSticky(`kl-studio-${id}`, DEFAULT_LOOK)
   const banners = Array.isArray(look.banners)
@@ -100,25 +100,7 @@ function StudioRoom({ broadcast, setBroadcast, dests, error, setError }) {
   }, [dests])
 
   // --- Fuentes de video: cámara de cada persona y pantallas compartidas ---
-  const tracks = useTracks(
-    [
-      { source: Track.Source.Camera, withPlaceholder: true },
-      { source: Track.Source.ScreenShare, withPlaceholder: false }
-    ],
-    { onlySubscribed: false }
-  )
-  const sources = useMemo(
-    () =>
-      tracks.map((ref) => ({
-        id: `${ref.participant.identity}:${ref.source}`,
-        isScreen: ref.source === Track.Source.ScreenShare,
-        isLocal: ref.participant.isLocal,
-        identity: ref.participant.identity,
-        name: ref.participant.name || ref.participant.identity,
-        trackRef: ref
-      })),
-    [tracks]
-  )
+  const sources = useStageSources()
   const onStage = stageIds.map((sid) => sources.find((s) => s.id === sid)).filter(Boolean)
 
   // Al entrar, el anfitrión aparece en escena.
@@ -204,20 +186,21 @@ function StudioRoom({ broadcast, setBroadcast, dests, error, setError }) {
   const setPrompter = (text) => setLook((l) => ({ ...l, prompter: text.slice(0, 5000) }))
   const bannerText = banners.find((b) => b.id === activeBanner)?.text
 
-  // --- Los invitados ven el mismo lienzo: se lo mandamos por el canal de datos ---
+  // --- Invitados y salida al aire ven el mismo lienzo: se manda por el canal de datos ---
+  // Egress entra como participante oculto (no aparece en la lista), por eso se publica
+  // siempre, y más seguido mientras se transmite para que arranque rápido.
   const { send: sendStage } = useDataChannel(STAGE_TOPIC)
   const remoteCount = useRemoteParticipants().length
   const stageKey = JSON.stringify({ layout, ids: stageIds, style, banner: bannerText || null })
+  const running = ['live', 'recording'].includes(broadcast.status)
   useEffect(() => {
-    if (remoteCount === 0) return undefined
     const publish = () => {
       Promise.resolve(sendStage(encodeStage(JSON.parse(stageKey)), { reliable: true })).catch(() => {})
     }
     publish()
-    // Se repite cada 5 s por si alguien entró justo entre dos cambios.
-    const t = setInterval(publish, 5000)
+    const t = setInterval(publish, running ? 2000 : 5000)
     return () => clearInterval(t)
-  }, [stageKey, remoteCount, sendStage])
+  }, [stageKey, remoteCount, running, sendStage])
 
   const removeGuest = async (source) => {
     if (!window.confirm(`¿Sacar a ${source.name} del estudio?`)) return
@@ -229,7 +212,6 @@ function StudioRoom({ broadcast, setBroadcast, dests, error, setError }) {
   }
 
   // --- Salir en vivo / grabar / terminar ---
-  const running = ['live', 'recording'].includes(broadcast.status)
   const ended = broadcast.status === 'ended'
   const isRecording = broadcast.kind === 'recording'
   const chosen = dests.filter((d) => selected.includes(d.id))
@@ -341,7 +323,7 @@ function StudioRoom({ broadcast, setBroadcast, dests, error, setError }) {
               </button>
             ))}
           </div>
-          {running && (
+          {running && !studioOutput && (
             <p className="muted small">
               Lo que sale al aire usa la plantilla de LiveKit más parecida al diseño con el que iniciaste.
             </p>

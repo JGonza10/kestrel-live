@@ -57,7 +57,8 @@ def get_broadcast(user, broadcast_id):
 def join_token(user, broadcast_id):
     b = _get_owned(user, broadcast_id)
     token = livekit_service.make_join_token(b.room_name, f"host-{user.id}", user.display_name)
-    return jsonify(token=token, ws_url=current_app.config["LIVEKIT_WS_URL"])
+    return jsonify(token=token, ws_url=current_app.config["LIVEKIT_WS_URL"],
+                   studio_output=bool(current_app.config.get("EGRESS_TEMPLATE_URL")))
 
 
 @bp.post("/<int:broadcast_id>/start")

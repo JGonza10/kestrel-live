@@ -1,20 +1,20 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import {
   LiveKitRoom,
   RoomAudioRenderer,
   useDataChannel,
   useLocalParticipant,
-  useRoomContext,
-  useTracks
+  useRoomContext
 } from '@livekit/components-react'
-import { DisconnectReason, Track } from 'livekit-client'
+import { DisconnectReason } from 'livekit-client'
 import { api } from '../api.js'
 import Logo from '../components/Logo.jsx'
 import Stage from '../studio/Stage.jsx'
 import DeviceSettings from '../studio/DeviceSettings.jsx'
 import { PrivateChat } from '../studio/SidePanel.jsx'
 import { STAGE_TOPIC, parseStage } from '../studio/stageSync.js'
+import { useStageSources } from '../studio/useStageSources.js'
 import '../studio/studio.css'
 
 const NAME_KEY = 'kl-guest-name'
@@ -156,24 +156,7 @@ function GuestRoom({ title, error, setError }) {
     if (st) setStage(st)
   })
 
-  const tracks = useTracks(
-    [
-      { source: Track.Source.Camera, withPlaceholder: true },
-      { source: Track.Source.ScreenShare, withPlaceholder: false }
-    ],
-    { onlySubscribed: false }
-  )
-  const sources = useMemo(
-    () =>
-      tracks.map((ref) => ({
-        id: `${ref.participant.identity}:${ref.source}`,
-        isScreen: ref.source === Track.Source.ScreenShare,
-        isLocal: ref.participant.isLocal,
-        name: ref.participant.name || ref.participant.identity,
-        trackRef: ref
-      })),
-    [tracks]
-  )
+  const sources = useStageSources()
   const onStage = (stage?.ids || []).map((sid) => sources.find((s) => s.id === sid)).filter(Boolean)
   const me = sources.find((s) => s.isLocal && !s.isScreen)
   const amOnStage = onStage.some((s) => s.isLocal)
